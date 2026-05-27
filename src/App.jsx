@@ -126,27 +126,28 @@ function PortfolioOverview() {
             data={portfolioMetrics}
             margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
             <XAxis
               dataKey="metric"
               angle={-45}
               textAnchor="end"
               height={100}
-              tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+              tick={{ fill: '#374151', fontSize: 12 }}
             />
-            <YAxis tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }} />
+            <YAxis tick={{ fill: '#374151', fontSize: 12 }} />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'rgba(15, 35, 65, 0.95)',
-                border: '1px solid rgba(122, 199, 255, 0.3)',
-                borderRadius: '8px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '2px',
+                color: '#1f2937',
               }}
-              labelStyle={{ color: 'rgba(255,255,255,0.9)' }}
+              labelStyle={{ color: '#1f2937' }}
             />
             <Legend
               wrapperStyle={{
                 paddingTop: '20px',
-                color: 'rgba(255,255,255,0.7)',
+                color: '#4b5563',
               }}
             />
             <Bar dataKey="PE" stackId="a" fill="#1e6fa8" name="PE" />
@@ -235,23 +236,24 @@ function AssetClassDetail({ commitmentData }) {
             data={totalsByFiscalYear}
             margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
             <XAxis
               dataKey="fiscalYear"
-              tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+              tick={{ fill: '#374151', fontSize: 12 }}
             />
             <YAxis
-              tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+              tick={{ fill: '#374151', fontSize: 12 }}
               tickFormatter={(value) => `$${value / 1000000}M`}
             />
             <Tooltip
               formatter={(value) => [formatMillions(value), 'Target Amount']}
               contentStyle={{
-                backgroundColor: 'rgba(15, 35, 65, 0.95)',
-                border: '1px solid rgba(122, 199, 255, 0.3)',
-                borderRadius: '8px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '2px',
+                color: '#1f2937',
               }}
-              labelStyle={{ color: 'rgba(255,255,255,0.9)' }}
+              labelStyle={{ color: '#1f2937' }}
             />
             <Bar
               dataKey="targetAmount"
