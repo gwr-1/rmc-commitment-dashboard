@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import { portfolioMetrics } from './data/portfolioMetrics'
 import { commitments } from './data/commitments'
+import { changeLog } from './data/changes'
 import './App.css'
 
 const views = [
@@ -25,9 +26,43 @@ const fiscalYears = ['FY26', 'FY27', 'FY28']
 const commitmentTypes = ['Fund', 'Co-Investment']
 const managerTypes = ['Current', 'New']
 const statusOptions = ['Closed', 'Pipeline', 'Under Review', 'Delayed', 'Removed']
+const changeTypes = ['Added', 'Edited', 'Deleted']
+
+const fieldLabels = {
+  managerType: 'Current/New Mgr.',
+  manager: 'Mgr. Name',
+  commitmentType: 'Fund/Co-Investment',
+  investmentName: 'Investment Name',
+  targetAmount: 'Target ($mm)',
+  status: 'Status',
+  fiscalYear: 'Fiscal Year (Actual/Expected)',
+}
 
 const formatMillions = (amount) => `$${(amount / 1000000).toFixed(0)}M`
 const toMillions = (amount) => amount / 1000000
+const changedByUser = 'Prototype User'
+
+const getInitialCommitments = () =>
+  commitments.map((commitment) => ({
+    ...commitment,
+    managerType: commitment.managerType || 'Current',
+  }))
+
+const formatTimestamp = (date) =>
+  date
+    .toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    .replace(',', '')
+
+const formatChangeValue = (field, value) => {
+  if (field === 'targetAmount') return formatMillions(value)
+  return String(value || '-')
+}
 
 function PortfolioOverview() {
   // Extract summary metrics
@@ -127,10 +162,10 @@ function PortfolioOverview() {
   )
 }
 
-function AssetClassDetail() {
+function AssetClassDetail({ commitmentData }) {
   const [selectedAssetClass, setSelectedAssetClass] = useState('RE')
 
-  const filteredCommitments = commitments.filter(
+  const filteredCommitments = commitmentData.filter(
     (commitment) => commitment.assetClass === selectedAssetClass
   )
 
@@ -305,13 +340,7 @@ function AssetClassDetail() {
   )
 }
 
-function CommitmentInput() {
-  const [editableCommitments, setEditableCommitments] = useState(() =>
-    commitments.map((commitment) => ({
-      ...commitment,
-      managerType: commitment.managerType || 'Current',
-    }))
-  )
+function CommitmentInput({ commitmentData, setCommitmentData, appendChange }) {
   const [filters, setFilters] = useState({
     fiscalYear: 'All',
     assetClass: 'All',
@@ -319,7 +348,7 @@ function CommitmentInput() {
   })
   const [searchTerm, setSearchTerm] = useState('')
 
-  const filteredCommitments = editableCommitments.filter((commitment) => {
+  const filteredCommitments = commitmentData.filter((commitment) => {
     const matchesFiscalYear =
       filters.fiscalYear === 'All' || commitment.fiscalYear === filters.fiscalYear
     const matchesAssetClass =
@@ -342,57 +371,93 @@ function CommitmentInput() {
   }
 
   const updateCommitment = (id, field, value) => {
-    setEditableCommitments((currentCommitments) =>
+    const originalCommitment = commitmentData.find((commitment) => commitment.id === id)
+    if (!originalCommitment) return
+
+    const nextValue =
+      field === 'targetAmount'
+        ? Math.max(Number.isNaN(Number(value)) ? 0 : Number(value), 0) * 1000000
+        : value
+
+    if (originalCommitment[field] === nextValue) return
+
+    const updatedCommitment = {
+      ...originalCommitment,
+      [field]: nextValue,
+    }
+
+    setCommitmentData((currentCommitments) =>
       currentCommitments.map((commitment) => {
         if (commitment.id !== id) return commitment
-
-        if (field === 'targetAmount') {
-          const numericValue = Number(value)
-          const safeValue = Number.isNaN(numericValue) ? 0 : Math.max(numericValue, 0)
-
-          return {
-            ...commitment,
-            targetAmount: safeValue * 1000000,
-          }
-        }
-
-        return {
-          ...commitment,
-          [field]: value,
-        }
+        return updatedCommitment
       })
     )
+
+    appendChange({
+      assetClass: updatedCommitment.assetClass,
+      fiscalYear: updatedCommitment.fiscalYear,
+      manager: updatedCommitment.manager,
+      investmentName: updatedCommitment.investmentName,
+      changeType: 'Edited',
+      fieldChanged: fieldLabels[field],
+      oldValue: formatChangeValue(field, originalCommitment[field]),
+      newValue: formatChangeValue(field, nextValue),
+    })
   }
 
   const addCommitment = () => {
-    const nextIdNumber = editableCommitments.length + 1
+    const nextIdNumber = commitmentData.length + 1
     const defaultAssetClass = filters.assetClass === 'All' ? 'RE' : filters.assetClass
     const defaultFiscalYear = filters.fiscalYear === 'All' ? 'FY26' : filters.fiscalYear
     const defaultStatus = filters.status === 'All' ? 'Pipeline' : filters.status
 
-    setEditableCommitments((currentCommitments) => [
-      {
-        id: `CMT-DRAFT-${nextIdNumber}`,
-        managerType: 'New',
-        fiscalYear: defaultFiscalYear,
-        assetClass: defaultAssetClass,
-        manager: 'New Manager',
-        investmentName: `${defaultAssetClass} Draft Commitment`,
-        commitmentType: 'Fund',
-        targetAmount: 0,
-        status: defaultStatus,
-        submissionStatus: 'Not Submitted',
-        expectedQuarter: 'Q1',
-        notes: 'Draft placeholder commitment.',
-      },
-      ...currentCommitments,
-    ])
+    const newCommitment = {
+      id: `CMT-DRAFT-${nextIdNumber}`,
+      managerType: 'New',
+      fiscalYear: defaultFiscalYear,
+      assetClass: defaultAssetClass,
+      manager: 'New Manager',
+      investmentName: `${defaultAssetClass} Draft Commitment`,
+      commitmentType: 'Fund',
+      targetAmount: 0,
+      status: defaultStatus,
+      submissionStatus: 'Not Submitted',
+      expectedQuarter: 'Q1',
+      notes: 'Draft placeholder commitment.',
+    }
+
+    setCommitmentData((currentCommitments) => [newCommitment, ...currentCommitments])
+
+    appendChange({
+      assetClass: newCommitment.assetClass,
+      fiscalYear: newCommitment.fiscalYear,
+      manager: newCommitment.manager,
+      investmentName: newCommitment.investmentName,
+      changeType: 'Added',
+      fieldChanged: 'Commitment',
+      oldValue: '-',
+      newValue: `${formatMillions(newCommitment.targetAmount)} target added`,
+    })
   }
 
   const deleteCommitment = (id) => {
-    setEditableCommitments((currentCommitments) =>
+    const deletedCommitment = commitmentData.find((commitment) => commitment.id === id)
+    if (!deletedCommitment) return
+
+    setCommitmentData((currentCommitments) =>
       currentCommitments.filter((commitment) => commitment.id !== id)
     )
+
+    appendChange({
+      assetClass: deletedCommitment.assetClass,
+      fiscalYear: deletedCommitment.fiscalYear,
+      manager: deletedCommitment.manager,
+      investmentName: deletedCommitment.investmentName,
+      changeType: 'Deleted',
+      fieldChanged: 'Commitment',
+      oldValue: `${formatMillions(deletedCommitment.targetAmount)} target`,
+      newValue: 'Deleted',
+    })
   }
 
   return (
@@ -598,27 +663,187 @@ function CommitmentInput() {
   )
 }
 
-function ChangeLog() {
+function ChangeLog({ changeLogRecords }) {
+  const [filters, setFilters] = useState({
+    assetClass: 'All',
+    fiscalYear: 'All',
+    changeType: 'All',
+  })
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const filteredChanges = changeLogRecords.filter((change) => {
+    const matchesAssetClass =
+      filters.assetClass === 'All' || change.assetClass === filters.assetClass
+    const matchesFiscalYear =
+      filters.fiscalYear === 'All' || change.fiscalYear === filters.fiscalYear
+    const matchesChangeType =
+      filters.changeType === 'All' || change.changeType === filters.changeType
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+    const matchesSearch =
+      normalizedSearch.length === 0 ||
+      change.manager.toLowerCase().includes(normalizedSearch) ||
+      change.investmentName.toLowerCase().includes(normalizedSearch)
+
+    return matchesAssetClass && matchesFiscalYear && matchesChangeType && matchesSearch
+  })
+
+  const updateFilter = (field, value) => {
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [field]: value,
+    }))
+  }
+
   return (
     <section className="view-panel">
-      <h2>Change Log</h2>
-      <p>Review the latest updates, approvals, and audit history for the commitment pipeline.</p>
-      <div className="placeholder-box">Change log entries and audit trail widgets will appear in this view.</div>
+      <div className="view-header-row">
+        <div>
+          <h2>Change Log</h2>
+          <p>Review field-level edits, additions, and deletions for the commitment pipeline.</p>
+        </div>
+      </div>
+
+      <div className="input-controls-panel">
+        <label className="filter-control">
+          <span>Asset Class</span>
+          <select
+            value={filters.assetClass}
+            onChange={(event) => updateFilter('assetClass', event.target.value)}
+          >
+            <option value="All">All</option>
+            {assetClasses.map((assetClass) => (
+              <option key={assetClass} value={assetClass}>
+                {assetClass}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Fiscal Year</span>
+          <select
+            value={filters.fiscalYear}
+            onChange={(event) => updateFilter('fiscalYear', event.target.value)}
+          >
+            <option value="All">All</option>
+            {fiscalYears.map((fiscalYear) => (
+              <option key={fiscalYear} value={fiscalYear}>
+                {fiscalYear}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Change Type</span>
+          <select
+            value={filters.changeType}
+            onChange={(event) => updateFilter('changeType', event.target.value)}
+          >
+            <option value="All">All</option>
+            {changeTypes.map((changeType) => (
+              <option key={changeType} value={changeType}>
+                {changeType}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control search-control">
+          <span>Search</span>
+          <input
+            type="search"
+            value={searchTerm}
+            placeholder="Manager or Investment Name"
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="commitment-input-panel">
+        <div className="input-table-meta">
+          <span>{filteredChanges.length} visible changes</span>
+          <span>{changeLogRecords.length} total records</span>
+        </div>
+
+        <div className="commitment-table-wrap">
+          <table className="commitment-table change-log-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Asset Class</th>
+                <th>Manager</th>
+                <th>Investment Name</th>
+                <th>Change Type</th>
+                <th>Field Changed</th>
+                <th>Old Value</th>
+                <th>New Value</th>
+                <th>Changed By</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredChanges.map((change) => (
+                <tr key={change.id}>
+                  <td>{change.timestamp}</td>
+                  <td>{change.assetClass}</td>
+                  <td>{change.manager}</td>
+                  <td>{change.investmentName}</td>
+                  <td>
+                    <span className={`change-type-pill change-${change.changeType.toLowerCase()}`}>
+                      {change.changeType}
+                    </span>
+                  </td>
+                  <td>{change.fieldChanged}</td>
+                  <td>{change.oldValue}</td>
+                  <td>{change.newValue}</td>
+                  <td>{change.changedBy}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredChanges.length === 0 && (
+          <div className="empty-table-state">
+            No change log records match the selected filters.
+          </div>
+        )}
+      </div>
     </section>
   )
 }
 
 function App() {
   const [activeView, setActiveView] = useState(views[0].key)
+  const [commitmentData, setCommitmentData] = useState(getInitialCommitments)
+  const [changeLogRecords, setChangeLogRecords] = useState(changeLog)
+
+  const appendChange = (change) => {
+    setChangeLogRecords((currentChanges) => [
+      {
+        id: `CHG-DRAFT-${currentChanges.length + 1}`,
+        timestamp: formatTimestamp(new Date()),
+        changedBy: changedByUser,
+        ...change,
+      },
+      ...currentChanges,
+    ])
+  }
 
   const renderView = () => {
     switch (activeView) {
       case 'asset-class':
-        return <AssetClassDetail />
+        return <AssetClassDetail commitmentData={commitmentData} />
       case 'commitment-input':
-        return <CommitmentInput />
+        return (
+          <CommitmentInput
+            commitmentData={commitmentData}
+            setCommitmentData={setCommitmentData}
+            appendChange={appendChange}
+          />
+        )
       case 'change-log':
-        return <ChangeLog />
+        return <ChangeLog changeLogRecords={changeLogRecords} />
       default:
         return <PortfolioOverview />
     }

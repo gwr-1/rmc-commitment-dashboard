@@ -515,6 +515,50 @@ a {
   color: rgba(231, 238, 248, 0.9);
 }
 
+.change-log-table {
+  min-width: 1280px;
+}
+
+.change-log-table td:nth-child(4) {
+  min-width: 210px;
+}
+
+.change-log-table td:nth-child(7),
+.change-log-table td:nth-child(8) {
+  min-width: 140px;
+  color: rgba(231, 238, 248, 0.9);
+}
+
+.change-type-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: rgba(122, 199, 255, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(122, 199, 255, 0.18);
+}
+
+.change-added {
+  background: rgba(80, 200, 150, 0.14);
+  color: #9fe7c7;
+  border-color: rgba(80, 200, 150, 0.2);
+}
+
+.change-edited {
+  background: rgba(122, 199, 255, 0.12);
+  color: var(--accent);
+  border-color: rgba(122, 199, 255, 0.2);
+}
+
+.change-deleted {
+  background: rgba(255, 109, 109, 0.12);
+  color: #ffb8b8;
+  border-color: rgba(255, 109, 109, 0.22);
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
