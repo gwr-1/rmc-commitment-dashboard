@@ -27,6 +27,13 @@ const commitmentTypes = ['Fund', 'Co-Investment']
 const managerTypes = ['Current', 'New']
 const statusOptions = ['Closed', 'Pipeline', 'Under Review', 'Delayed', 'Removed']
 const changeTypes = ['Added', 'Edited', 'Deleted']
+const assetClassNames = {
+  PE: 'Private Equity',
+  VC: 'Venture Capital',
+  NR: 'Natural Resources',
+  RE: 'Real Estate',
+  NMA: 'Non-Marketable Alternatives',
+}
 
 const fieldLabels = {
   managerType: 'Current/New Mgr.',
@@ -170,6 +177,29 @@ function AssetClassDetail({ commitmentData }) {
     (commitment) => commitment.assetClass === selectedAssetClass
   )
 
+  const chartMetricOrder = [
+    { fiscalYear: 'FY26', metric: 'Commitments YTD' },
+    { fiscalYear: 'FY26', metric: 'Normal Target' },
+    { fiscalYear: 'FY26', metric: 'Calls YTD' },
+    { fiscalYear: 'FY26', metric: 'Distributions YTD', label: 'Dist. YTD' },
+    { fiscalYear: 'FY27', metric: 'Commitment Pipeline' },
+    { fiscalYear: 'FY27', metric: 'Normal Target' },
+    { fiscalYear: 'FY28', metric: 'Commitment Pipeline' },
+    { fiscalYear: 'FY28', metric: 'Normal Target' },
+  ]
+
+  const assetClassChartData = chartMetricOrder.map((item) => {
+    const metricRow = portfolioMetrics.find(
+      (row) => row.fiscalYear === item.fiscalYear && row.metric === item.metric
+    )
+
+    return {
+      fiscalYear: item.fiscalYear,
+      label: item.label || item.metric,
+      value: metricRow?.[selectedAssetClass] || 0,
+    }
+  })
+
   const totalsByFiscalYear = fiscalYears.map((fiscalYear) => {
     const targetAmount = filteredCommitments
       .filter((commitment) => commitment.fiscalYear === fiscalYear)
@@ -190,12 +220,20 @@ function AssetClassDetail({ commitmentData }) {
     return groups
   }, {})
 
+  const getRowsByType = (fiscalYear, commitmentType) =>
+    commitmentsByFiscalYear[fiscalYear].filter(
+      (commitment) => commitment.commitmentType === commitmentType
+    )
+
+  const getTotalByType = (rows) =>
+    rows.reduce((total, commitment) => total + commitment.targetAmount, 0)
+
   return (
-    <section className="view-panel">
-      <div className="view-header-row">
+    <section className="view-panel asset-detail-view">
+      <div className="asset-report-header">
         <div>
-          <h2>Asset Class Detail</h2>
-          <p>Review target commitment pipeline by fiscal year and fund type.</p>
+          <h2>{assetClassNames[selectedAssetClass]}</h2>
+          <p>Commitment pipeline reporting exhibit</p>
         </div>
 
         <div className="asset-selector" aria-label="Asset class selector">
@@ -214,39 +252,46 @@ function AssetClassDetail({ commitmentData }) {
         </div>
       </div>
 
-      <div className="summary-cards-grid">
+      <div className="asset-kpi-row">
         {totalsByFiscalYear.map((row) => (
           <div className="summary-card" key={row.fiscalYear}>
-            <span className="summary-label">{row.fiscalYear} Target Amount</span>
+            <span className="summary-label">{row.fiscalYear} Target</span>
             <strong className="summary-value">{formatMillions(row.targetAmount)}</strong>
-            <span className="summary-detail">{selectedAssetClass} pipeline</span>
           </div>
         ))}
         <div className="summary-card summary-card-total">
-          <span className="summary-label">Total Pipeline Amount</span>
+          <span className="summary-label">Total Pipeline</span>
           <strong className="summary-value">{formatMillions(totalPipelineAmount)}</strong>
-          <span className="summary-detail">FY26-FY28</span>
         </div>
       </div>
 
-      <div className="chart-container">
-        <h3>{selectedAssetClass} Target Amounts by Fiscal Year</h3>
-        <ResponsiveContainer width="100%" height={320}>
+      <div className="chart-container asset-report-chart">
+        <h3>{selectedAssetClass} Metrics by Fiscal Year</h3>
+        <ResponsiveContainer width="100%" height={230}>
           <BarChart
-            data={totalsByFiscalYear}
-            margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
+            data={assetClassChartData}
+            margin={{ top: 8, right: 18, left: 0, bottom: 28 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
             <XAxis
-              dataKey="fiscalYear"
-              tick={{ fill: '#374151', fontSize: 12 }}
+              dataKey="label"
+              interval={0}
+              angle={-25}
+              textAnchor="end"
+              height={58}
+              tick={{ fill: '#374151', fontSize: 10 }}
             />
             <YAxis
-              tick={{ fill: '#374151', fontSize: 12 }}
-              tickFormatter={(value) => `$${value / 1000000}M`}
+              tick={{ fill: '#374151', fontSize: 10 }}
+              tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
-              formatter={(value) => [formatMillions(value), 'Target Amount']}
+              formatter={(value) => [`$${value}M`, selectedAssetClass]}
+              labelFormatter={(label, payload) =>
+                payload?.[0]?.payload
+                  ? `${payload[0].payload.fiscalYear} - ${label}`
+                  : label
+              }
               contentStyle={{
                 backgroundColor: '#ffffff',
                 border: '1px solid #d1d5db',
@@ -256,89 +301,77 @@ function AssetClassDetail({ commitmentData }) {
               labelStyle={{ color: '#1f2937' }}
             />
             <Bar
-              dataKey="targetAmount"
-              fill="#7ac7ff"
-              radius={[8, 8, 0, 0]}
-              name="Target Amount"
+              dataKey="value"
+              fill="#8ec5e8"
+              name={selectedAssetClass}
             />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="fiscal-year-sections">
+      <div className="asset-fiscal-grid">
         {fiscalYears.map((fiscalYear) => {
-          const fiscalYearCommitments = commitmentsByFiscalYear[fiscalYear]
+          const fundRows = getRowsByType(fiscalYear, 'Fund')
+          const coInvestmentRows = getRowsByType(fiscalYear, 'Co-Investment')
 
           return (
-            <section className="fiscal-year-panel" key={fiscalYear}>
-              <div className="fiscal-year-heading">
-                <div>
-                  <h3>{fiscalYear}</h3>
-                  <span>{formatMillions(totalsByFiscalYear.find((row) => row.fiscalYear === fiscalYear).targetAmount)} total target</span>
-                </div>
-                <span className="record-count">{fiscalYearCommitments.length} records</span>
-              </div>
-
-              {commitmentTypes.map((commitmentType) => {
-                const rows = fiscalYearCommitments.filter(
-                  (commitment) => commitment.commitmentType === commitmentType
-                )
-
-                return (
-                  <div className="commitment-table-group" key={commitmentType}>
-                    <div className="table-group-heading">
-                      <h4>{commitmentType}s</h4>
-                      <span>{formatMillions(rows.reduce((total, row) => total + row.targetAmount, 0))}</span>
-                    </div>
-
-                    {rows.length > 0 ? (
-                      <div className="commitment-table-wrap">
-                        <table className="commitment-table">
-                          <thead>
-                            <tr>
-                              <th>Manager</th>
-                              <th>Investment Name</th>
-                              <th>Commitment Type</th>
-                              <th>Target Amount</th>
-                              <th>Status</th>
-                              <th>Submission Status</th>
-                              <th>Expected Quarter</th>
-                              <th>Notes</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {rows.map((commitment) => (
-                              <tr key={commitment.id}>
-                                <td>{commitment.manager}</td>
-                                <td>{commitment.investmentName}</td>
-                                <td>{commitment.commitmentType}</td>
-                                <td>{formatMillions(commitment.targetAmount)}</td>
-                                <td>
-                                  <span className={`status-pill status-${commitment.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                                    {commitment.status}
-                                  </span>
-                                </td>
-                                <td>{commitment.submissionStatus}</td>
-                                <td>{commitment.expectedQuarter}</td>
-                                <td>{commitment.notes}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <div className="empty-table-state">
-                        No {commitmentType.toLowerCase()} commitments for {fiscalYear}.
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+            <section className="asset-fiscal-column" key={fiscalYear}>
+              <h3>{fiscalYear}</h3>
+              <AssetReportTable
+                title="Funds"
+                rows={fundRows}
+                totalLabel="Total Proj. (Funds)"
+                totalAmount={getTotalByType(fundRows)}
+              />
+              <AssetReportTable
+                title="Co-Investments"
+                rows={coInvestmentRows}
+                totalLabel="Total Proj. (Co-Invest)"
+                totalAmount={getTotalByType(coInvestmentRows)}
+              />
             </section>
           )
         })}
       </div>
     </section>
+  )
+}
+
+function AssetReportTable({ title, rows, totalLabel, totalAmount }) {
+  return (
+    <div className="asset-report-table-block">
+      <div className="asset-report-table-title">{title}</div>
+      <table className="asset-report-table">
+        <thead>
+          <tr>
+            <th>Manager Name</th>
+            <th>Investment Name</th>
+            <th>Target ($mm)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length > 0 ? (
+            rows.map((commitment) => (
+              <tr key={commitment.id}>
+                <td>{commitment.manager}</td>
+                <td>{commitment.investmentName}</td>
+                <td>{toMillions(commitment.targetAmount).toFixed(0)}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td className="asset-report-none" colSpan="3">
+                (none)
+              </td>
+            </tr>
+          )}
+          <tr className="asset-report-total-row">
+            <td colSpan="2">{totalLabel}</td>
+            <td>{toMillions(totalAmount).toFixed(0)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   )
 }
 
