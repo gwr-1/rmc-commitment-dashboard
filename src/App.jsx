@@ -1,121 +1,116 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
 
+const views = [
+  { key: 'overview', label: 'Portfolio Overview' },
+  { key: 'asset-class', label: 'Asset Class Detail' },
+  { key: 'commitment-input', label: 'Commitment Input' },
+  { key: 'change-log', label: 'Change Log' },
+]
+
+function PortfolioOverview() {
+  return (
+    <section className="view-panel">
+      <h2>Portfolio Overview</h2>
+      <p>Summary metrics, pipeline status, and portfolio allocation trends appear here.</p>
+      <div className="panel-grid">
+        <div className="metric-card">
+          <span className="metric-label">Total Commitments</span>
+          <strong>152</strong>
+        </div>
+        <div className="metric-card">
+          <span className="metric-label">Pending Approval</span>
+          <strong>34</strong>
+        </div>
+        <div className="metric-card">
+          <span className="metric-label">Available Capacity</span>
+          <strong>$1.8B</strong>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AssetClassDetail() {
+  return (
+    <section className="view-panel">
+      <h2>Asset Class Detail</h2>
+      <p>View exposure breakdowns, risk characteristics, and concentration by asset class.</p>
+      <div className="placeholder-box">Asset class detail widgets and charts will load in this prototype.</div>
+    </section>
+  )
+}
+
+function CommitmentInput() {
+  return (
+    <section className="view-panel">
+      <h2>Commitment Input</h2>
+      <p>Enter new commitment details, review underwriting assumptions, and track requests.</p>
+      <div className="placeholder-box">Commitment input forms and validation panels will be added here.</div>
+    </section>
+  )
+}
+
+function ChangeLog() {
+  return (
+    <section className="view-panel">
+      <h2>Change Log</h2>
+      <p>Review the latest updates, approvals, and audit history for the commitment pipeline.</p>
+      <div className="placeholder-box">Change log entries and audit trail widgets will appear in this view.</div>
+    </section>
+  )
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeView, setActiveView] = useState(views[0].key)
+
+  const renderView = () => {
+    switch (activeView) {
+      case 'asset-class':
+        return <AssetClassDetail />
+      case 'commitment-input':
+        return <CommitmentInput />
+      case 'change-log':
+        return <ChangeLog />
+      default:
+        return <PortfolioOverview />
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="dashboard-shell">
+      <header className="dashboard-header">
+        <div className="brand-block">
+          <span className="brand-tag">RMC</span>
+          <h1>Commitment Pipeline Dashboard</h1>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        <div className="header-meta">Prototype | Front-end only</div>
+      </header>
 
-      <div className="ticks"></div>
+      <div className="dashboard-content">
+        <aside className="dashboard-sidebar">
+          <div className="sidebar-title">Navigation</div>
+          <nav className="sidebar-nav">
+            {views.map((view) => (
+              <button
+                key={view.key}
+                type="button"
+                className={`nav-button ${activeView === view.key ? 'active' : ''}`}
+                onClick={() => setActiveView(view.key)}
+              >
+                {view.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <main className="dashboard-main">
+          <div className="main-panel">
+            {renderView()}
+          </div>
+        </main>
+      </div>
+    </div>
   )
 }
 
