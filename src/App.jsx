@@ -1,4 +1,15 @@
 import { useState } from 'react'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
+import { portfolioMetrics } from './data/portfolioMetrics'
 import './App.css'
 
 const views = [
@@ -9,23 +20,98 @@ const views = [
 ]
 
 function PortfolioOverview() {
+  // Extract summary metrics
+  const fy26CommitmentsYTD = portfolioMetrics.find(
+    (m) => m.fiscalYear === 'FY26' && m.metric === 'Commitments YTD'
+  )
+  const fy26NormalTarget = portfolioMetrics.find(
+    (m) => m.fiscalYear === 'FY26' && m.metric === 'Normal Target'
+  )
+  const fy27Pipeline = portfolioMetrics.find(
+    (m) => m.fiscalYear === 'FY27' && m.metric === 'Commitment Pipeline'
+  )
+  const fy28Pipeline = portfolioMetrics.find(
+    (m) => m.fiscalYear === 'FY28' && m.metric === 'Commitment Pipeline'
+  )
+
+  const calculateTotal = (metric) => {
+    if (!metric) return 0
+    return (
+      (metric.PE || 0) +
+      (metric.VC || 0) +
+      (metric.NR || 0) +
+      (metric.RE || 0) +
+      (metric.NMA || 0) +
+      (metric.Pipeline || 0)
+    )
+  }
+
   return (
     <section className="view-panel">
       <h2>Portfolio Overview</h2>
-      <p>Summary metrics, pipeline status, and portfolio allocation trends appear here.</p>
-      <div className="panel-grid">
-        <div className="metric-card">
-          <span className="metric-label">Total Commitments</span>
-          <strong>152</strong>
+      <p>Summary metrics and portfolio allocation by asset class across fiscal years.</p>
+
+      <div className="summary-cards-grid">
+        <div className="summary-card">
+          <span className="summary-label">FY26 Commitments YTD</span>
+          <strong className="summary-value">${calculateTotal(fy26CommitmentsYTD)}</strong>
+          <span className="summary-detail">Millions</span>
         </div>
-        <div className="metric-card">
-          <span className="metric-label">Pending Approval</span>
-          <strong>34</strong>
+        <div className="summary-card">
+          <span className="summary-label">FY26 Normal Target</span>
+          <strong className="summary-value">${calculateTotal(fy26NormalTarget)}</strong>
+          <span className="summary-detail">Millions</span>
         </div>
-        <div className="metric-card">
-          <span className="metric-label">Available Capacity</span>
-          <strong>$1.8B</strong>
+        <div className="summary-card">
+          <span className="summary-label">FY27 Pipeline</span>
+          <strong className="summary-value">${calculateTotal(fy27Pipeline)}</strong>
+          <span className="summary-detail">Millions</span>
         </div>
+        <div className="summary-card">
+          <span className="summary-label">FY28 Pipeline</span>
+          <strong className="summary-value">${calculateTotal(fy28Pipeline)}</strong>
+          <span className="summary-detail">Millions</span>
+        </div>
+      </div>
+
+      <div className="chart-container">
+        <h3>Portfolio Metrics by Fiscal Year and Type</h3>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart
+            data={portfolioMetrics}
+            margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <XAxis
+              dataKey="metric"
+              angle={-45}
+              textAnchor="end"
+              height={100}
+              tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+            />
+            <YAxis tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(15, 35, 65, 0.95)',
+                border: '1px solid rgba(122, 199, 255, 0.3)',
+                borderRadius: '8px',
+              }}
+              labelStyle={{ color: 'rgba(255,255,255,0.9)' }}
+            />
+            <Legend
+              wrapperStyle={{
+                paddingTop: '20px',
+                color: 'rgba(255,255,255,0.7)',
+              }}
+            />
+            <Bar dataKey="PE" stackId="a" fill="#1e6fa8" name="PE" />
+            <Bar dataKey="VC" stackId="a" fill="#4a91ff" name="VC" />
+            <Bar dataKey="NR" stackId="a" fill="#7ac7ff" name="NR" />
+            <Bar dataKey="RE" stackId="a" fill="#46a8ff" name="RE" />
+            <Bar dataKey="NMA" stackId="a" fill="#5db4ff" name="NMA" />
+            <Bar dataKey="Pipeline" stackId="a" fill="rgba(122, 199, 255, 0.4)" name="Pipeline" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </section>
   )
