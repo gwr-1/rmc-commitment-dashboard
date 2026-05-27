@@ -22,9 +22,12 @@ const views = [
 
 const assetClasses = ['PE', 'VC', 'NR', 'RE', 'NMA']
 const fiscalYears = ['FY26', 'FY27', 'FY28']
-const commitmentTypes = ['Fund', 'Co-investment']
+const commitmentTypes = ['Fund', 'Co-Investment']
+const managerTypes = ['Current', 'New']
+const statusOptions = ['Closed', 'Pipeline', 'Under Review', 'Delayed', 'Removed']
 
 const formatMillions = (amount) => `$${(amount / 1000000).toFixed(0)}M`
+const toMillions = (amount) => amount / 1000000
 
 function PortfolioOverview() {
   // Extract summary metrics
@@ -303,11 +306,294 @@ function AssetClassDetail() {
 }
 
 function CommitmentInput() {
+  const [editableCommitments, setEditableCommitments] = useState(() =>
+    commitments.map((commitment) => ({
+      ...commitment,
+      managerType: commitment.managerType || 'Current',
+    }))
+  )
+  const [filters, setFilters] = useState({
+    fiscalYear: 'All',
+    assetClass: 'All',
+    status: 'All',
+  })
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const filteredCommitments = editableCommitments.filter((commitment) => {
+    const matchesFiscalYear =
+      filters.fiscalYear === 'All' || commitment.fiscalYear === filters.fiscalYear
+    const matchesAssetClass =
+      filters.assetClass === 'All' || commitment.assetClass === filters.assetClass
+    const matchesStatus = filters.status === 'All' || commitment.status === filters.status
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+    const matchesSearch =
+      normalizedSearch.length === 0 ||
+      commitment.manager.toLowerCase().includes(normalizedSearch) ||
+      commitment.investmentName.toLowerCase().includes(normalizedSearch)
+
+    return matchesFiscalYear && matchesAssetClass && matchesStatus && matchesSearch
+  })
+
+  const updateFilter = (field, value) => {
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [field]: value,
+    }))
+  }
+
+  const updateCommitment = (id, field, value) => {
+    setEditableCommitments((currentCommitments) =>
+      currentCommitments.map((commitment) => {
+        if (commitment.id !== id) return commitment
+
+        if (field === 'targetAmount') {
+          const numericValue = Number(value)
+          const safeValue = Number.isNaN(numericValue) ? 0 : Math.max(numericValue, 0)
+
+          return {
+            ...commitment,
+            targetAmount: safeValue * 1000000,
+          }
+        }
+
+        return {
+          ...commitment,
+          [field]: value,
+        }
+      })
+    )
+  }
+
+  const addCommitment = () => {
+    const nextIdNumber = editableCommitments.length + 1
+    const defaultAssetClass = filters.assetClass === 'All' ? 'RE' : filters.assetClass
+    const defaultFiscalYear = filters.fiscalYear === 'All' ? 'FY26' : filters.fiscalYear
+    const defaultStatus = filters.status === 'All' ? 'Pipeline' : filters.status
+
+    setEditableCommitments((currentCommitments) => [
+      {
+        id: `CMT-DRAFT-${nextIdNumber}`,
+        managerType: 'New',
+        fiscalYear: defaultFiscalYear,
+        assetClass: defaultAssetClass,
+        manager: 'New Manager',
+        investmentName: `${defaultAssetClass} Draft Commitment`,
+        commitmentType: 'Fund',
+        targetAmount: 0,
+        status: defaultStatus,
+        submissionStatus: 'Not Submitted',
+        expectedQuarter: 'Q1',
+        notes: 'Draft placeholder commitment.',
+      },
+      ...currentCommitments,
+    ])
+  }
+
+  const deleteCommitment = (id) => {
+    setEditableCommitments((currentCommitments) =>
+      currentCommitments.filter((commitment) => commitment.id !== id)
+    )
+  }
+
   return (
     <section className="view-panel">
-      <h2>Commitment Input</h2>
-      <p>Enter new commitment details, review underwriting assumptions, and track requests.</p>
-      <div className="placeholder-box">Commitment input forms and validation panels will be added here.</div>
+      <div className="view-header-row">
+        <div>
+          <h2>Commitment Input</h2>
+          <p>Enter expected commitment updates using the asset class head input format.</p>
+        </div>
+
+        <button type="button" className="primary-action-button" onClick={addCommitment}>
+          Add Commitment
+        </button>
+      </div>
+
+      <div className="input-controls-panel">
+        <label className="filter-control">
+          <span>Fiscal Year</span>
+          <select
+            value={filters.fiscalYear}
+            onChange={(event) => updateFilter('fiscalYear', event.target.value)}
+          >
+            <option value="All">All</option>
+            {fiscalYears.map((fiscalYear) => (
+              <option key={fiscalYear} value={fiscalYear}>
+                {fiscalYear}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Asset Class</span>
+          <select
+            value={filters.assetClass}
+            onChange={(event) => updateFilter('assetClass', event.target.value)}
+          >
+            <option value="All">All</option>
+            {assetClasses.map((assetClass) => (
+              <option key={assetClass} value={assetClass}>
+                {assetClass}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control">
+          <span>Status</span>
+          <select
+            value={filters.status}
+            onChange={(event) => updateFilter('status', event.target.value)}
+          >
+            <option value="All">All</option>
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-control search-control">
+          <span>Search</span>
+          <input
+            type="search"
+            value={searchTerm}
+            placeholder="Mgr. Name or Investment Name"
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="commitment-input-panel">
+        <div className="input-table-meta">
+          <span>{filteredCommitments.length} visible commitments</span>
+          <span>{formatMillions(filteredCommitments.reduce((total, row) => total + row.targetAmount, 0))} visible target</span>
+        </div>
+
+        <div className="commitment-table-wrap">
+          <table className="commitment-table input-commitments-table">
+            <thead>
+              <tr>
+                <th>Current/New Mgr.</th>
+                <th>Mgr. Name</th>
+                <th>Fund/Co-Investment</th>
+                <th>Investment Name</th>
+                <th>Target ($mm)</th>
+                <th>Status</th>
+                <th>Fiscal Year (Actual/Expected)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCommitments.map((commitment) => (
+                <tr key={commitment.id}>
+                  <td>
+                    <select
+                      value={commitment.managerType}
+                      onChange={(event) =>
+                        updateCommitment(commitment.id, 'managerType', event.target.value)
+                      }
+                    >
+                      {managerTypes.map((managerType) => (
+                        <option key={managerType} value={managerType}>
+                          {managerType}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={commitment.manager}
+                      onChange={(event) =>
+                        updateCommitment(commitment.id, 'manager', event.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <select
+                      value={commitment.commitmentType}
+                      onChange={(event) =>
+                        updateCommitment(commitment.id, 'commitmentType', event.target.value)
+                      }
+                    >
+                      {commitmentTypes.map((commitmentType) => (
+                        <option key={commitmentType} value={commitmentType}>
+                          {commitmentType}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={commitment.investmentName}
+                      onChange={(event) =>
+                        updateCommitment(commitment.id, 'investmentName', event.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={toMillions(commitment.targetAmount)}
+                      onChange={(event) =>
+                        updateCommitment(commitment.id, 'targetAmount', event.target.value)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <select
+                      value={commitment.status}
+                      onChange={(event) =>
+                        updateCommitment(commitment.id, 'status', event.target.value)
+                      }
+                    >
+                      {statusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      value={commitment.fiscalYear}
+                      onChange={(event) =>
+                        updateCommitment(commitment.id, 'fiscalYear', event.target.value)
+                      }
+                    >
+                      {fiscalYears.map((fiscalYear) => (
+                        <option key={fiscalYear} value={fiscalYear}>
+                          {fiscalYear}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="danger-action-button"
+                      onClick={() => deleteCommitment(commitment.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredCommitments.length === 0 && (
+          <div className="empty-table-state">
+            No commitments match the selected filters.
+          </div>
+        )}
+      </div>
     </section>
   )
 }

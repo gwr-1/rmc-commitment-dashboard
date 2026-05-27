@@ -1,6 +1,7 @@
 export const commitments = [
   {
     id: 'CMT-001',
+    managerType: 'Current',
     fiscalYear: 'FY26',
     assetClass: 'PE',
     manager: 'Alpha Partners',
@@ -14,6 +15,7 @@ export const commitments = [
   },
   {
     id: 'CMT-002',
+    managerType: 'New',
     fiscalYear: 'FY26',
     assetClass: 'VC',
     manager: 'Beacon Capital',
@@ -27,11 +29,12 @@ export const commitments = [
   },
   {
     id: 'CMT-003',
+    managerType: 'Current',
     fiscalYear: 'FY26',
     assetClass: 'NR',
     manager: 'Cedar Growth',
     investmentName: 'Cedar Growth Partners IV',
-    commitmentType: 'Co-investment',
+    commitmentType: 'Co-Investment',
     targetAmount: 65000000,
     status: 'Under Review',
     submissionStatus: 'Not Submitted',
@@ -40,6 +43,7 @@ export const commitments = [
   },
   {
     id: 'CMT-004',
+    managerType: 'New',
     fiscalYear: 'FY26',
     assetClass: 'RE',
     manager: 'Summit Real',
@@ -53,6 +57,7 @@ export const commitments = [
   },
   {
     id: 'CMT-005',
+    managerType: 'Current',
     fiscalYear: 'FY26',
     assetClass: 'NMA',
     manager: 'Harbor Credit',
@@ -66,6 +71,7 @@ export const commitments = [
   },
   {
     id: 'CMT-006',
+    managerType: 'New',
     fiscalYear: 'FY27',
     assetClass: 'VC',
     manager: 'Northstar Venture',
@@ -79,11 +85,12 @@ export const commitments = [
   },
   {
     id: 'CMT-007',
+    managerType: 'Current',
     fiscalYear: 'FY27',
     assetClass: 'NR',
     manager: 'Meridian Infrastructure',
     investmentName: 'Meridian Infrastructure Fund VI',
-    commitmentType: 'Co-investment',
+    commitmentType: 'Co-Investment',
     targetAmount: 72000000,
     status: 'Under Review',
     submissionStatus: 'Submitted',
@@ -92,6 +99,7 @@ export const commitments = [
   },
   {
     id: 'CMT-008',
+    managerType: 'New',
     fiscalYear: 'FY28',
     assetClass: 'RE',
     manager: 'Blue Ridge Secondary',
@@ -105,11 +113,12 @@ export const commitments = [
   },
   {
     id: 'CMT-009',
+    managerType: 'Current',
     fiscalYear: 'FY28',
     assetClass: 'PE',
     manager: 'Summit Real',
     investmentName: 'Summit Real Assets Fund IV',
-    commitmentType: 'Co-investment',
+    commitmentType: 'Co-Investment',
     targetAmount: 45000000,
     status: 'Pipeline',
     submissionStatus: 'Not Submitted',
@@ -118,6 +127,7 @@ export const commitments = [
   },
   {
     id: 'CMT-010',
+    managerType: 'Current',
     fiscalYear: 'FY27',
     assetClass: 'NMA',
     manager: 'Harbor Credit',

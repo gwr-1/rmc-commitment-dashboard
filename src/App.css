@@ -212,6 +212,102 @@ a {
   box-shadow: inset 0 0 0 1px rgba(122, 199, 255, 0.34);
 }
 
+.primary-action-button,
+.danger-action-button {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.primary-action-button {
+  padding: 12px 16px;
+  background: rgba(122, 199, 255, 0.18);
+  color: #fff;
+  border-color: rgba(122, 199, 255, 0.34);
+}
+
+.primary-action-button:hover,
+.primary-action-button:focus-visible {
+  background: rgba(122, 199, 255, 0.26);
+  transform: translateY(-1px);
+}
+
+.danger-action-button {
+  padding: 9px 12px;
+  background: rgba(255, 109, 109, 0.12);
+  color: #ffb8b8;
+  border-color: rgba(255, 109, 109, 0.22);
+}
+
+.danger-action-button:hover,
+.danger-action-button:focus-visible {
+  background: rgba(255, 109, 109, 0.2);
+  border-color: rgba(255, 109, 109, 0.34);
+}
+
+.input-controls-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr)) minmax(260px, 1.5fr);
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.filter-control {
+  display: grid;
+  gap: 8px;
+}
+
+.filter-control span {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.filter-control select,
+.filter-control input,
+.input-commitments-table select,
+.input-commitments-table input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid rgba(122, 199, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(5, 16, 32, 0.72);
+  color: var(--text);
+  padding: 8px 10px;
+  outline: none;
+}
+
+.filter-control select:focus,
+.filter-control input:focus,
+.input-commitments-table select:focus,
+.input-commitments-table input:focus {
+  border-color: rgba(122, 199, 255, 0.46);
+  box-shadow: 0 0 0 3px rgba(122, 199, 255, 0.12);
+}
+
+.filter-control input::placeholder {
+  color: rgba(148, 167, 196, 0.72);
+}
+
+.commitment-input-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.input-table-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
 .panel-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -405,6 +501,20 @@ a {
   color: var(--text-muted);
 }
 
+.input-commitments-table {
+  min-width: 1220px;
+}
+
+.input-commitments-table td:nth-child(2),
+.input-commitments-table td:nth-child(4) {
+  min-width: 190px;
+}
+
+.input-commitments-table td:nth-child(8) {
+  min-width: 100px;
+  color: rgba(231, 238, 248, 0.9);
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -433,6 +543,12 @@ a {
   background: rgba(168, 137, 255, 0.14);
   color: #cabaff;
   border-color: rgba(168, 137, 255, 0.22);
+}
+
+.status-removed {
+  background: rgba(255, 109, 109, 0.12);
+  color: #ffb8b8;
+  border-color: rgba(255, 109, 109, 0.22);
 }
 
 .empty-table-state {
@@ -464,6 +580,14 @@ a {
   .view-header-row {
     flex-direction: column;
   }
+
+  .input-controls-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .search-control {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 640px) {
@@ -489,6 +613,19 @@ a {
 
   .asset-selector-button {
     flex: 1 0 auto;
+  }
+
+  .primary-action-button {
+    width: 100%;
+  }
+
+  .input-controls-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .input-table-meta {
+    flex-direction: column;
+    gap: 6px;
   }
 
   .fiscal-year-panel {
