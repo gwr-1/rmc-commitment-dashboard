@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LabelList,
 } from 'recharts'
 import { portfolioMetrics } from './data/portfolioMetrics'
 import { commitments } from './data/commitments'
@@ -69,6 +70,38 @@ const formatTimestamp = (date) =>
 const formatChangeValue = (field, value) => {
   if (field === 'targetAmount') return formatMillions(value)
   return String(value || '-')
+}
+
+function AssetChartTick({ x, y, payload }) {
+  const lines = String(payload.value).split(' ')
+
+  return (
+    <text x={x} y={y + 8} fill="#00205B" fontSize={10} textAnchor="middle">
+      {lines.map((line, index) => (
+        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 12}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  )
+}
+
+function AssetChartValueLabel({ x, y, width, value }) {
+  const numericValue = Number(value)
+  const labelY = numericValue === 0 ? y - 5 : Math.max(y - 6, 12)
+
+  return (
+    <text
+      x={x + width / 2}
+      y={labelY}
+      fill="#00205B"
+      fontSize={10}
+      fontWeight={700}
+      textAnchor="middle"
+    >
+      {`$${numericValue}M`}
+    </text>
+  )
 }
 
 function PortfolioOverview() {
@@ -178,10 +211,10 @@ function AssetClassDetail({ commitmentData }) {
   )
 
   const chartMetricOrder = [
-    { fiscalYear: 'FY26', metric: 'Commitments YTD' },
+    { fiscalYear: 'FY26', metric: 'Commitments YTD', displayLabel: 'Commitments YTD' },
     { fiscalYear: 'FY26', metric: 'Normal Target' },
     { fiscalYear: 'FY26', metric: 'Calls YTD' },
-    { fiscalYear: 'FY26', metric: 'Distributions YTD', label: 'Dist. YTD' },
+    { fiscalYear: 'FY26', metric: 'Distributions YTD', displayLabel: 'Dist. YTD' },
     { fiscalYear: 'FY27', metric: 'Commitment Pipeline' },
     { fiscalYear: 'FY27', metric: 'Normal Target' },
     { fiscalYear: 'FY28', metric: 'Commitment Pipeline' },
@@ -195,7 +228,7 @@ function AssetClassDetail({ commitmentData }) {
 
     return {
       fiscalYear: item.fiscalYear,
-      label: item.label || item.metric,
+      displayLabel: item.displayLabel || item.metric,
       value: metricRow?.[selectedAssetClass] || 0,
     }
   })
@@ -267,19 +300,17 @@ function AssetClassDetail({ commitmentData }) {
 
       <div className="chart-container asset-report-chart">
         <h3>{selectedAssetClass} Metrics by Fiscal Year</h3>
-        <ResponsiveContainer width="100%" height={230}>
+        <ResponsiveContainer width="100%" height={240}>
           <BarChart
             data={assetClassChartData}
-            margin={{ top: 8, right: 18, left: 0, bottom: 28 }}
+            margin={{ top: 20, right: 18, left: 0, bottom: 48 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
             <XAxis
-              dataKey="label"
+              dataKey="displayLabel"
               interval={0}
-              angle={-25}
-              textAnchor="end"
-              height={58}
-              tick={{ fill: '#374151', fontSize: 10 }}
+              height={66}
+              tick={<AssetChartTick />}
             />
             <YAxis
               tick={{ fill: '#374151', fontSize: 10 }}
@@ -303,10 +334,18 @@ function AssetClassDetail({ commitmentData }) {
             <Bar
               dataKey="value"
               fill="#8ec5e8"
+              minPointSize={3}
               name={selectedAssetClass}
-            />
+            >
+              <LabelList dataKey="value" content={<AssetChartValueLabel />} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
+        <div className="asset-chart-year-row" aria-hidden="true">
+          <span>FY26</span>
+          <span>FY27</span>
+          <span>FY28</span>
+        </div>
       </div>
 
       <div className="asset-fiscal-grid">

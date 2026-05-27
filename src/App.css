@@ -474,6 +474,26 @@ a {
   font-size: 1.05rem;
 }
 
+.asset-chart-year-row {
+  display: grid;
+  grid-template-columns: 4fr 2fr 2fr;
+  margin: -8px 18px 0 42px;
+  border-top: 1px solid var(--border-strong);
+}
+
+.asset-chart-year-row span {
+  padding-top: 3px;
+  color: var(--navy);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  border-right: 1px solid var(--border-strong);
+}
+
+.asset-chart-year-row span:last-child {
+  border-right: 0;
+}
+
 .asset-fiscal-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
