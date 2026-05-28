@@ -418,11 +418,6 @@ a {
   line-height: 1;
 }
 
-.asset-report-header p {
-  margin-top: 2px;
-  font-size: 0.84rem;
-}
-
 .asset-detail-view .asset-selector-button {
   min-width: 44px;
   padding: 7px 11px;
@@ -566,9 +561,6 @@ a {
   justify-content: space-between;
   gap: 16px;
   align-items: center;
-}
-
-.input-table-meta {
   color: var(--text-muted);
   font-size: 0.88rem;
 }

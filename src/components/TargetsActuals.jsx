@@ -6,7 +6,7 @@ const editableMetrics = [
   { key: 'Distributions YTD', label: 'Dist. YTD' },
 ]
 
-function TargetsActuals({ targetsActuals, setTargetsActuals, onPersistTargetActual }) {
+function TargetsActuals({ targetsActuals, setTargetsActuals, onPersistPortfolioMetric }) {
   const updateTargetActual = (assetClass, fiscalYear, metric, value) => {
     const numericValue = Math.max(Number.isNaN(Number(value)) ? 0 : Number(value), 0)
 
@@ -18,7 +18,7 @@ function TargetsActuals({ targetsActuals, setTargetsActuals, onPersistTargetActu
       )
     )
 
-    onPersistTargetActual?.({
+    onPersistPortfolioMetric?.({
       fiscalYear,
       assetClass,
       metric,

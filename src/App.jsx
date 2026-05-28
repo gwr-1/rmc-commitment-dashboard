@@ -52,7 +52,7 @@ function App() {
   const [targetsActualsLoadedFromSupabase, setTargetsActualsLoadedFromSupabase] =
     useState(false)
 
-  const targetActualMetrics = targetsActualsRowsToPortfolioMetrics(
+  const chartPortfolioMetrics = targetsActualsRowsToPortfolioMetrics(
     targetsActuals,
     fiscalYears,
     assetClasses
@@ -114,7 +114,7 @@ function App() {
     }
   }, [])
 
-  const persistTargetActual = async ({ fiscalYear, assetClass, metric, amount }) => {
+  const persistPortfolioMetric = async ({ fiscalYear, assetClass, metric, amount }) => {
     if (!isSupabaseConfigured || !targetsActualsLoadedFromSupabase) return
 
     try {
@@ -187,7 +187,7 @@ function App() {
         return (
           <AssetClassDetail
             commitmentData={commitmentData}
-            portfolioMetrics={targetActualMetrics}
+            portfolioMetrics={chartPortfolioMetrics}
           />
         )
       case 'commitment-input':
@@ -204,7 +204,7 @@ function App() {
           <TargetsActuals
             targetsActuals={targetsActuals}
             setTargetsActuals={setTargetsActuals}
-            onPersistTargetActual={persistTargetActual}
+            onPersistPortfolioMetric={persistPortfolioMetric}
           />
         )
       case 'change-log':
@@ -215,7 +215,7 @@ function App() {
         return (
           <PortfolioOverview
             commitmentData={commitmentData}
-            portfolioMetrics={targetActualMetrics}
+            portfolioMetrics={chartPortfolioMetrics}
           />
         )
     }
