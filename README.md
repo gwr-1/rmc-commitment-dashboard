@@ -1,16 +1,79 @@
-# React + Vite
+# Commitment Pipeline Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Front-end prototype for an internal commitment pipeline reporting workflow. The dashboard is intended to replace recurring PowerPoint draft updates with a live, structured view of expected commitments by fiscal year, asset class, and investment.
 
-Currently, two official plugins are available:
+## Current Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Portfolio Overview with summary cards and fiscal-year stacked bar chart
+- Asset Class Detail with compact senior-staff reporting layout
+- Commitment Input with editable in-memory commitment rows
+- Change Log that records in-session add, edit, and delete activity
+- Snapshots view for saving point-in-time commitment views in React state
+- Print-friendly snapshot output using browser print / Save as PDF
+- Dummy anonymized data only
+- React state only
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React
+- Vite
+- Recharts
+- CSS in `src/App.css`
+- Dummy data modules in `src/data`
 
-## Expanding the ESLint configuration
+## Local Setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the local development server:
+
+```bash
+npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+Preview the production build:
+
+```bash
+npm run preview
+```
+
+## Available Commands
+
+- `npm run dev` - start the Vite development server
+- `npm run build` - create a production build
+- `npm run lint` - run ESLint
+- `npm run preview` - preview the production build locally
+
+## Current Limitations
+
+- No backend
+- No database persistence
+- No user authentication
+- No role-based permissions
+- No localStorage persistence
+- No deployment configuration
+- Snapshots and edits reset on page refresh
+- Change log is in-memory only
+- Data is anonymized dummy data only
+- Print support uses browser print; no generated PDF library is included
+
+## Future Roadmap
+
+- Backend/database persistence
+- User authentication
+- Role-based permissions
+- Permanent audit log
+- Persistent snapshots
+- Snapshot comparison
+- Internal deployment
+- Optional PDF/PPT export
