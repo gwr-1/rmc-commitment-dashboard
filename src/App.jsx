@@ -9,6 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
   LabelList,
+  ReferenceArea,
 } from 'recharts'
 import { portfolioMetrics } from './data/portfolioMetrics'
 import { commitments } from './data/commitments'
@@ -72,8 +73,9 @@ const formatChangeValue = (field, value) => {
   return String(value || '-')
 }
 
-function AssetChartTick({ x, y, payload }) {
-  const lines = String(payload.value).split(' ')
+function AssetChartTick({ x, y, payload, data }) {
+  const item = data.find((row) => row.xKey === payload.value)
+  const lines = String(item?.displayLabel || payload.value).split(' ')
 
   return (
     <text x={x} y={y + 8} fill="#00205B" fontSize={10} textAnchor="middle">
@@ -227,24 +229,12 @@ function AssetClassDetail({ commitmentData }) {
     )
 
     return {
+      xKey: `${item.fiscalYear}-${item.metric}`,
       fiscalYear: item.fiscalYear,
       displayLabel: item.displayLabel || item.metric,
       value: metricRow?.[selectedAssetClass] || 0,
     }
   })
-
-  const totalsByFiscalYear = fiscalYears.map((fiscalYear) => {
-    const targetAmount = filteredCommitments
-      .filter((commitment) => commitment.fiscalYear === fiscalYear)
-      .reduce((total, commitment) => total + commitment.targetAmount, 0)
-
-    return { fiscalYear, targetAmount }
-  })
-
-  const totalPipelineAmount = totalsByFiscalYear.reduce(
-    (total, row) => total + row.targetAmount,
-    0
-  )
 
   const commitmentsByFiscalYear = fiscalYears.reduce((groups, fiscalYear) => {
     groups[fiscalYear] = filteredCommitments.filter(
@@ -267,6 +257,7 @@ function AssetClassDetail({ commitmentData }) {
         <div>
           <h2>{assetClassNames[selectedAssetClass]}</h2>
           <p>Commitment pipeline reporting exhibit</p>
+          <span className="asset-report-updated">Last updated: Prototype data</span>
         </div>
 
         <div className="asset-selector" aria-label="Asset class selector">
@@ -285,32 +276,36 @@ function AssetClassDetail({ commitmentData }) {
         </div>
       </div>
 
-      <div className="asset-kpi-row">
-        {totalsByFiscalYear.map((row) => (
-          <div className="summary-card" key={row.fiscalYear}>
-            <span className="summary-label">{row.fiscalYear} Target</span>
-            <strong className="summary-value">{formatMillions(row.targetAmount)}</strong>
-          </div>
-        ))}
-        <div className="summary-card summary-card-total">
-          <span className="summary-label">Total Pipeline</span>
-          <strong className="summary-value">{formatMillions(totalPipelineAmount)}</strong>
-        </div>
-      </div>
-
       <div className="chart-container asset-report-chart">
         <h3>{selectedAssetClass} Metrics by Fiscal Year</h3>
-        <ResponsiveContainer width="100%" height={240}>
+        <div className="asset-chart-top-year-row" aria-hidden="true">
+          <span>FY26</span>
+          <span>FY27</span>
+          <span>FY28</span>
+        </div>
+        <ResponsiveContainer width="100%" height={236}>
           <BarChart
             data={assetClassChartData}
-            margin={{ top: 20, right: 18, left: 0, bottom: 48 }}
+            margin={{ top: 10, right: 18, left: 0, bottom: 42 }}
           >
+            <ReferenceArea
+              x1="FY26-Commitments YTD"
+              x2="FY26-Distributions YTD"
+              fill="#f7f8fa"
+              strokeOpacity={0}
+            />
+            <ReferenceArea
+              x1="FY28-Commitment Pipeline"
+              x2="FY28-Normal Target"
+              fill="#f7f8fa"
+              strokeOpacity={0}
+            />
             <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
             <XAxis
-              dataKey="displayLabel"
+              dataKey="xKey"
               interval={0}
-              height={66}
-              tick={<AssetChartTick />}
+              height={58}
+              tick={<AssetChartTick data={assetClassChartData} />}
             />
             <YAxis
               tick={{ fill: '#374151', fontSize: 10 }}
@@ -320,7 +315,7 @@ function AssetClassDetail({ commitmentData }) {
               formatter={(value) => [`$${value}M`, selectedAssetClass]}
               labelFormatter={(label, payload) =>
                 payload?.[0]?.payload
-                  ? `${payload[0].payload.fiscalYear} - ${label}`
+                  ? `${payload[0].payload.fiscalYear} - ${payload[0].payload.displayLabel}`
                   : label
               }
               contentStyle={{
