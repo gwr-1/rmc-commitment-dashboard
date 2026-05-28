@@ -372,7 +372,7 @@ a {
 .overview-chart-top-year-row,
 .overview-chart-year-row {
   display: grid;
-  grid-template-columns: 4fr 2fr 2fr;
+  grid-template-columns: 5fr 2fr 2fr;
   margin: 0 30px 0 42px;
 }
 
@@ -389,7 +389,7 @@ a {
 .overview-chart-year-row span {
   padding: 3px 0;
   color: var(--navy);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 700;
   text-align: center;
   border-right: 1px solid var(--border-strong);
@@ -439,7 +439,7 @@ a {
 .asset-chart-top-year-row,
 .asset-chart-year-row {
   display: grid;
-  grid-template-columns: 4fr 2fr 2fr;
+  grid-template-columns: 5fr 2fr 2fr;
   margin: 0 18px 0 42px;
 }
 
@@ -456,7 +456,7 @@ a {
 .asset-chart-year-row span {
   padding: 2px 0;
   color: var(--navy);
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-align: center;
   border-right: 1px solid var(--border-strong);

@@ -2,7 +2,18 @@ export const assetClasses = ['PE', 'VC', 'NR', 'RE', 'NMA']
 export const fiscalYears = ['FY26', 'FY27', 'FY28']
 export const commitmentTypes = ['Fund', 'Co-Investment']
 export const managerTypes = ['Current', 'New']
-export const statusOptions = ['Closed', 'Pipeline', 'Under Review', 'Delayed', 'Removed']
+export const fundStatusOptions = [
+  'Anticipated but not in the market',
+  'In the market',
+  'Approved but not submitted',
+  'Submitted/Closed',
+]
+export const coInvestmentStatusOptions = [
+  'Longer Term Prospects',
+  'Under Consideration',
+  'Closed',
+]
+export const statusOptions = [...fundStatusOptions, ...coInvestmentStatusOptions]
 export const changeTypes = ['Added', 'Edited', 'Deleted']
 
 export const assetClassNames = {
@@ -25,6 +36,7 @@ export const fieldLabels = {
 
 export const assetChartMetrics = [
   { fiscalYear: 'FY26', metric: 'Commitments YTD', displayLabel: 'Commitments YTD' },
+  { fiscalYear: 'FY26', metric: 'Pipeline' },
   { fiscalYear: 'FY26', metric: 'Normal Target' },
   { fiscalYear: 'FY26', metric: 'Calls YTD' },
   { fiscalYear: 'FY26', metric: 'Distributions YTD', displayLabel: 'Dist. YTD' },

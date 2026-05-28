@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import {
   assetClasses,
+  coInvestmentStatusOptions,
   commitmentTypes,
   fieldLabels,
   fiscalYears,
+  fundStatusOptions,
   managerTypes,
   statusOptions,
 } from '../constants'
@@ -28,6 +30,18 @@ function CommitmentInput({
     status: 'All',
   })
   const [searchTerm, setSearchTerm] = useState('')
+  const filterStatusOptions = Array.from(
+    new Set([...statusOptions, ...commitmentData.map((commitment) => commitment.status).filter(Boolean)])
+  )
+
+  const getValidStatusOptions = (commitmentType) =>
+    commitmentType === 'Co-Investment' ? coInvestmentStatusOptions : fundStatusOptions
+
+  const getStatusOptions = (commitment) => {
+    const validOptions = getValidStatusOptions(commitment.commitmentType)
+    if (!commitment.status || validOptions.includes(commitment.status)) return validOptions
+    return [commitment.status, ...validOptions]
+  }
 
   const filteredCommitments = commitmentData.filter((commitment) => {
     const matchesFiscalYear =
@@ -99,7 +113,7 @@ function CommitmentInput({
 
     const nextValue =
       field === 'targetAmount'
-        ? Math.max(Number.isNaN(Number(value)) ? 0 : Number(value), 0) * 1000000
+        ? Math.max(Number.isNaN(Number(value)) ? 0 : Number(value), 0)
         : value
 
     if (originalCommitment[field] === nextValue) return
@@ -107,6 +121,25 @@ function CommitmentInput({
     const updatedCommitment = {
       ...originalCommitment,
       [field]: nextValue,
+    }
+    const changeEntries = [
+      {
+        field,
+        oldValue: originalCommitment[field],
+        newValue: nextValue,
+      },
+    ]
+
+    if (field === 'commitmentType') {
+      const validStatusOptions = getValidStatusOptions(nextValue)
+      if (!validStatusOptions.includes(updatedCommitment.status)) {
+        updatedCommitment.status = validStatusOptions[0]
+        changeEntries.push({
+          field: 'status',
+          oldValue: originalCommitment.status,
+          newValue: updatedCommitment.status,
+        })
+      }
     }
 
     setCommitmentData((currentCommitments) =>
@@ -116,18 +149,25 @@ function CommitmentInput({
       })
     )
 
-    appendChange({
-      assetClass: updatedCommitment.assetClass,
-      fiscalYear: updatedCommitment.fiscalYear,
-      manager: updatedCommitment.manager,
-      investmentName: updatedCommitment.investmentName,
-      changeType: 'Edited',
-      fieldChanged: fieldLabels[field],
-      oldValue: formatChangeValue(field, originalCommitment[field]),
-      newValue: formatChangeValue(field, nextValue),
-    })
+    changeEntries.forEach((change) => {
+      appendChange({
+        assetClass: updatedCommitment.assetClass,
+        fiscalYear: updatedCommitment.fiscalYear,
+        manager: updatedCommitment.manager,
+        investmentName: updatedCommitment.investmentName,
+        changeType: 'Edited',
+        fieldChanged: fieldLabels[change.field],
+        oldValue: formatChangeValue(change.field, change.oldValue),
+        newValue: formatChangeValue(change.field, change.newValue),
+      })
 
-    persistCommitmentEdit(originalCommitment, updatedCommitment, field, nextValue)
+      persistCommitmentEdit(
+        originalCommitment,
+        updatedCommitment,
+        change.field,
+        change.newValue
+      )
+    })
   }
 
   const appendAddedChange = (commitment) => {
@@ -187,7 +227,10 @@ function CommitmentInput({
     const nextIdNumber = commitmentData.length + 1
     const defaultAssetClass = filters.assetClass === 'All' ? 'RE' : filters.assetClass
     const defaultFiscalYear = filters.fiscalYear === 'All' ? 'FY26' : filters.fiscalYear
-    const defaultStatus = filters.status === 'All' ? 'Pipeline' : filters.status
+    const defaultStatus =
+      filters.status !== 'All' && fundStatusOptions.includes(filters.status)
+        ? filters.status
+        : fundStatusOptions[0]
 
     const newCommitment = {
       id: `CMT-DRAFT-${nextIdNumber}`,
@@ -287,7 +330,7 @@ function CommitmentInput({
             onChange={(event) => updateFilter('status', event.target.value)}
           >
             <option value="All">All</option>
-            {statusOptions.map((status) => (
+            {filterStatusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}
               </option>
@@ -393,7 +436,7 @@ function CommitmentInput({
                         updateCommitment(commitment.id, 'status', event.target.value)
                       }
                     >
-                      {statusOptions.map((status) => (
+                      {getStatusOptions(commitment).map((status) => (
                         <option key={status} value={status}>
                           {status}
                         </option>

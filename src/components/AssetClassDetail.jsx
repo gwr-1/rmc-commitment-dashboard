@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -17,16 +18,20 @@ import {
   fiscalYears,
 } from '../constants'
 import { portfolioMetrics } from '../data/portfolioMetrics'
-import { toMillions } from '../utils/calculations'
+import {
+  calculateCommitmentTotal,
+  isClosedCommitment,
+  toMillions,
+} from '../utils/calculations'
 
 function AssetChartTick({ x, y, payload, data }) {
   const item = data.find((row) => row.xKey === payload.value)
   const lines = String(item?.displayLabel || payload.value).split(' ')
 
   return (
-    <text x={x} y={y + 8} fill="#00205B" fontSize={10} textAnchor="middle">
+    <text x={x} y={y + 8} fill="#00205B" fontSize={11} textAnchor="middle">
       {lines.map((line, index) => (
-        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 12}>
+        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 13}>
           {line}
         </tspan>
       ))}
@@ -43,11 +48,11 @@ function AssetChartValueLabel({ x, y, width, value }) {
       x={x + width / 2}
       y={labelY}
       fill="#00205B"
-      fontSize={10}
+      fontSize={11}
       fontWeight={700}
       textAnchor="middle"
     >
-      {`$${numericValue}M`}
+      {`$${numericValue.toLocaleString('en-US', { maximumFractionDigits: 1 })}M`}
     </text>
   )
 }
@@ -97,16 +102,42 @@ function AssetClassDetail({ commitmentData }) {
     (commitment) => commitment.assetClass === selectedAssetClass
   )
 
-  const assetClassChartData = assetChartMetrics.map((item) => {
+  const getSelectedAssetTotal = (fiscalYear, predicate = () => true) =>
+    calculateCommitmentTotal(
+      filteredCommitments,
+      (commitment) => commitment.fiscalYear === fiscalYear && predicate(commitment)
+    )
+
+  const getChartMetricValue = (item) => {
+    if (item.fiscalYear === 'FY26' && item.metric === 'Commitments YTD') {
+      return getSelectedAssetTotal('FY26', isClosedCommitment)
+    }
+
+    if (item.fiscalYear === 'FY26' && item.metric === 'Pipeline') {
+      return getSelectedAssetTotal('FY26', (commitment) => !isClosedCommitment(commitment))
+    }
+
+    if (
+      (item.fiscalYear === 'FY27' || item.fiscalYear === 'FY28') &&
+      item.metric === 'Commitment Pipeline'
+    ) {
+      return getSelectedAssetTotal(item.fiscalYear)
+    }
+
     const metricRow = portfolioMetrics.find(
       (row) => row.fiscalYear === item.fiscalYear && row.metric === item.metric
     )
 
+    return metricRow?.[selectedAssetClass] || 0
+  }
+
+  const assetClassChartData = assetChartMetrics.map((item) => {
     return {
       xKey: `${item.fiscalYear}-${item.metric}`,
       fiscalYear: item.fiscalYear,
       displayLabel: item.displayLabel || item.metric,
-      value: metricRow?.[selectedAssetClass] || 0,
+      value: getChartMetricValue(item),
+      isPipelineOutline: item.fiscalYear === 'FY26' && item.metric === 'Pipeline',
     }
   })
 
@@ -155,10 +186,10 @@ function AssetClassDetail({ commitmentData }) {
           <span>FY27</span>
           <span>FY28</span>
         </div>
-        <ResponsiveContainer width="100%" height={236}>
+        <ResponsiveContainer width="100%" height={240}>
           <BarChart
             data={assetClassChartData}
-            margin={{ top: 10, right: 18, left: 0, bottom: 42 }}
+            margin={{ top: 12, right: 18, left: 0, bottom: 46 }}
           >
             <ReferenceArea
               x1="FY26-Commitments YTD"
@@ -180,11 +211,14 @@ function AssetClassDetail({ commitmentData }) {
               tick={<AssetChartTick data={assetClassChartData} />}
             />
             <YAxis
-              tick={{ fill: '#374151', fontSize: 10 }}
+              tick={{ fill: '#374151', fontSize: 11 }}
               tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
-              formatter={(value) => [`$${value}M`, selectedAssetClass]}
+              formatter={(value) => [
+                `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 1 })}M`,
+                selectedAssetClass,
+              ]}
               labelFormatter={(label, payload) =>
                 payload?.[0]?.payload
                   ? `${payload[0].payload.fiscalYear} - ${payload[0].payload.displayLabel}`
@@ -204,6 +238,14 @@ function AssetClassDetail({ commitmentData }) {
               minPointSize={3}
               name={selectedAssetClass}
             >
+              {assetClassChartData.map((entry) => (
+                <Cell
+                  key={entry.xKey}
+                  fill={entry.isPipelineOutline ? '#ffffff' : '#8ec5e8'}
+                  stroke={entry.isPipelineOutline ? '#00205B' : '#8ec5e8'}
+                  strokeWidth={entry.isPipelineOutline ? 2 : 1}
+                />
+              ))}
               <LabelList dataKey="value" content={<AssetChartValueLabel />} />
             </Bar>
           </BarChart>

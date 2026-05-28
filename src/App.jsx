@@ -129,7 +129,7 @@ function App() {
       case 'snapshots':
         return <Snapshots snapshots={snapshots} onCreateSnapshot={createSnapshot} />
       default:
-        return <PortfolioOverview />
+        return <PortfolioOverview commitmentData={commitmentData} />
     }
   }
 

@@ -1,6 +1,7 @@
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -10,28 +11,31 @@ import {
   LabelList,
   ReferenceArea,
 } from 'recharts'
+import { assetChartMetrics, assetClasses } from '../constants'
 import { portfolioMetrics } from '../data/portfolioMetrics'
-import { calculatePortfolioMetricTotal } from '../utils/calculations'
+import {
+  calculateCommitmentTotal,
+  calculatePortfolioMetricTotal,
+  isClosedCommitment,
+} from '../utils/calculations'
 
-const overviewChartMetrics = [
-  { fiscalYear: 'FY26', metric: 'Commitments YTD', displayLabel: 'Commitments YTD' },
-  { fiscalYear: 'FY26', metric: 'Normal Target' },
-  { fiscalYear: 'FY26', metric: 'Calls YTD' },
-  { fiscalYear: 'FY26', metric: 'Distributions YTD', displayLabel: 'Dist. YTD' },
-  { fiscalYear: 'FY27', metric: 'Commitment Pipeline' },
-  { fiscalYear: 'FY27', metric: 'Normal Target' },
-  { fiscalYear: 'FY28', metric: 'Commitment Pipeline' },
-  { fiscalYear: 'FY28', metric: 'Normal Target' },
-]
+const overviewBarColors = {
+  PE: '#1e6fa8',
+  VC: '#4a91ff',
+  NR: '#7ac7ff',
+  RE: '#46a8ff',
+  NMA: '#5db4ff',
+  Pipeline: 'rgba(122, 199, 255, 0.4)',
+}
 
 function OverviewChartTick({ x, y, payload, data }) {
   const item = data.find((row) => row.xKey === payload.value)
   const lines = String(item?.displayLabel || payload.value).split(' ')
 
   return (
-    <text x={x} y={y + 8} fill="#00205B" fontSize={11} textAnchor="middle">
+    <text x={x} y={y + 8} fill="#00205B" fontSize={12} textAnchor="middle">
       {lines.map((line, index) => (
-        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 13}>
+        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 14}>
           {line}
         </tspan>
       ))}
@@ -48,16 +52,16 @@ function OverviewTotalLabel({ x, y, width, value }) {
       x={x + width / 2}
       y={labelY}
       fill="#00205B"
-      fontSize={11}
+      fontSize={12}
       fontWeight={700}
       textAnchor="middle"
     >
-      {`$${numericValue}M`}
+      {`$${numericValue.toLocaleString('en-US', { maximumFractionDigits: 1 })}M`}
     </text>
   )
 }
 
-function PortfolioOverview() {
+function PortfolioOverview({ commitmentData }) {
   const fy26CommitmentsYTD = portfolioMetrics.find(
     (m) => m.fiscalYear === 'FY26' && m.metric === 'Commitments YTD'
   )
@@ -70,10 +74,50 @@ function PortfolioOverview() {
   const fy28Pipeline = portfolioMetrics.find(
     (m) => m.fiscalYear === 'FY28' && m.metric === 'Commitment Pipeline'
   )
-  const overviewChartData = overviewChartMetrics.map((item) => {
-    const metricRow = portfolioMetrics.find(
+
+  const getLiveCommitmentRow = (item, predicate = () => true) => {
+    const assetClassValues = assetClasses.reduce((values, assetClass) => {
+      values[assetClass] = calculateCommitmentTotal(
+        commitmentData,
+        (commitment) =>
+          commitment.assetClass === assetClass &&
+          commitment.fiscalYear === item.fiscalYear &&
+          predicate(commitment)
+      )
+      return values
+    }, {})
+
+    return {
+      fiscalYear: item.fiscalYear,
+      metric: item.metric,
+      ...assetClassValues,
+      Pipeline: 0,
+    }
+  }
+
+  const getOverviewMetricRow = (item) => {
+    if (item.fiscalYear === 'FY26' && item.metric === 'Commitments YTD') {
+      return getLiveCommitmentRow(item, isClosedCommitment)
+    }
+
+    if (item.fiscalYear === 'FY26' && item.metric === 'Pipeline') {
+      return getLiveCommitmentRow(item, (commitment) => !isClosedCommitment(commitment))
+    }
+
+    if (
+      (item.fiscalYear === 'FY27' || item.fiscalYear === 'FY28') &&
+      item.metric === 'Commitment Pipeline'
+    ) {
+      return getLiveCommitmentRow(item)
+    }
+
+    return portfolioMetrics.find(
       (row) => row.fiscalYear === item.fiscalYear && row.metric === item.metric
     )
+  }
+
+  const overviewChartData = assetChartMetrics.map((item) => {
+    const metricRow = getOverviewMetricRow(item)
 
     return {
       ...metricRow,
@@ -81,8 +125,19 @@ function PortfolioOverview() {
       fiscalYear: item.fiscalYear,
       displayLabel: item.displayLabel || item.metric,
       total: calculatePortfolioMetricTotal(metricRow),
+      isPipelineOutline: item.fiscalYear === 'FY26' && item.metric === 'Pipeline',
     }
   })
+
+  const renderCells = (dataKey) =>
+    overviewChartData.map((entry) => (
+      <Cell
+        key={`${entry.xKey}-${dataKey}`}
+        fill={entry.isPipelineOutline ? '#ffffff' : overviewBarColors[dataKey]}
+        stroke={entry.isPipelineOutline ? '#00205B' : overviewBarColors[dataKey]}
+        strokeWidth={entry.isPipelineOutline ? 1.5 : 1}
+      />
+    ))
 
   return (
     <section className="view-panel">
@@ -144,6 +199,10 @@ function PortfolioOverview() {
             />
             <YAxis tick={{ fill: '#374151', fontSize: 12 }} />
             <Tooltip
+              formatter={(value, name) => [
+                `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 1 })}M`,
+                name,
+              ]}
               labelFormatter={(label, payload) =>
                 payload?.[0]?.payload
                   ? `${payload[0].payload.fiscalYear} - ${payload[0].payload.displayLabel}`
@@ -161,14 +220,31 @@ function PortfolioOverview() {
               wrapperStyle={{
                 paddingTop: '20px',
                 color: '#4b5563',
+                fontSize: '13px',
               }}
             />
-            <Bar dataKey="PE" stackId="a" fill="#1e6fa8" name="PE" />
-            <Bar dataKey="VC" stackId="a" fill="#4a91ff" name="VC" />
-            <Bar dataKey="NR" stackId="a" fill="#7ac7ff" name="NR" />
-            <Bar dataKey="RE" stackId="a" fill="#46a8ff" name="RE" />
-            <Bar dataKey="NMA" stackId="a" fill="#5db4ff" name="NMA" />
-            <Bar dataKey="Pipeline" stackId="a" fill="rgba(122, 199, 255, 0.4)" name="Pipeline">
+            <Bar dataKey="PE" stackId="a" fill={overviewBarColors.PE} name="PE">
+              {renderCells('PE')}
+            </Bar>
+            <Bar dataKey="VC" stackId="a" fill={overviewBarColors.VC} name="VC">
+              {renderCells('VC')}
+            </Bar>
+            <Bar dataKey="NR" stackId="a" fill={overviewBarColors.NR} name="NR">
+              {renderCells('NR')}
+            </Bar>
+            <Bar dataKey="RE" stackId="a" fill={overviewBarColors.RE} name="RE">
+              {renderCells('RE')}
+            </Bar>
+            <Bar dataKey="NMA" stackId="a" fill={overviewBarColors.NMA} name="NMA">
+              {renderCells('NMA')}
+            </Bar>
+            <Bar
+              dataKey="Pipeline"
+              stackId="a"
+              fill={overviewBarColors.Pipeline}
+              name="Pipeline"
+            >
+              {renderCells('Pipeline')}
               <LabelList dataKey="total" content={<OverviewTotalLabel />} />
             </Bar>
           </BarChart>
