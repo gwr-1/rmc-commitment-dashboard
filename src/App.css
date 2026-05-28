@@ -173,7 +173,7 @@ a {
 .view-panel {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
 }
 
 .view-panel h2,
@@ -196,12 +196,6 @@ a {
 
 .view-panel h4 {
   font-size: 1.1rem;
-}
-
-.view-panel p {
-  margin: 4px 0 0;
-  color: var(--text-muted);
-  line-height: 1.55;
 }
 
 .view-header-row {
@@ -371,6 +365,41 @@ a {
   padding: 22px;
 }
 
+.portfolio-overview-chart {
+  gap: 8px;
+}
+
+.overview-chart-top-year-row,
+.overview-chart-year-row {
+  display: grid;
+  grid-template-columns: 4fr 2fr 2fr;
+  margin: 0 30px 0 42px;
+}
+
+.overview-chart-top-year-row {
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.overview-chart-year-row {
+  margin-top: -8px;
+  border-top: 1px solid var(--border-strong);
+}
+
+.overview-chart-top-year-row span,
+.overview-chart-year-row span {
+  padding: 3px 0;
+  color: var(--navy);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  border-right: 1px solid var(--border-strong);
+}
+
+.overview-chart-top-year-row span:last-child,
+.overview-chart-year-row span:last-child {
+  border-right: 0;
+}
+
 .asset-detail-view {
   gap: 8px;
 }
@@ -390,13 +419,6 @@ a {
 .asset-report-header p {
   margin-top: 2px;
   font-size: 0.84rem;
-}
-
-.asset-report-updated {
-  display: block;
-  margin-top: 1px;
-  color: var(--text-muted);
-  font-size: 0.72rem;
 }
 
 .asset-detail-view .asset-selector-button {

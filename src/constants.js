@@ -14,13 +14,13 @@ export const assetClassNames = {
 }
 
 export const fieldLabels = {
-  managerType: 'Current/New Mgr.',
-  manager: 'Mgr. Name',
-  commitmentType: 'Fund/Co-Investment',
-  investmentName: 'Investment Name',
+  managerType: 'Manager Type',
+  manager: 'Manager',
+  commitmentType: 'Commitment Type',
+  investmentName: 'Investment',
   targetAmount: 'Target ($mm)',
   status: 'Status',
-  fiscalYear: 'Fiscal Year (Actual/Expected)',
+  fiscalYear: 'Fiscal Year',
 }
 
 export const assetChartMetrics = [

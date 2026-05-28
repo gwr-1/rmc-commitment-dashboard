@@ -86,13 +86,13 @@ function CommitmentInput({ commitmentData, setCommitmentData, appendChange }) {
       fiscalYear: defaultFiscalYear,
       assetClass: defaultAssetClass,
       manager: 'New Manager',
-      investmentName: `${defaultAssetClass} Draft Commitment`,
+      investmentName: `${defaultAssetClass} Commitment`,
       commitmentType: 'Fund',
       targetAmount: 0,
       status: defaultStatus,
       submissionStatus: 'Not Submitted',
       expectedQuarter: 'Q1',
-      notes: 'Draft placeholder commitment.',
+      notes: 'New commitment entry.',
     }
 
     setCommitmentData((currentCommitments) => [newCommitment, ...currentCommitments])
@@ -134,7 +134,6 @@ function CommitmentInput({ commitmentData, setCommitmentData, appendChange }) {
       <div className="view-header-row">
         <div>
           <h2>Commitment Input</h2>
-          <p>Enter expected commitment updates using the asset class head input format.</p>
         </div>
 
         <button type="button" className="primary-action-button" onClick={addCommitment}>
@@ -193,7 +192,7 @@ function CommitmentInput({ commitmentData, setCommitmentData, appendChange }) {
           <input
             type="search"
             value={searchTerm}
-            placeholder="Mgr. Name or Investment Name"
+            placeholder="Manager or Investment"
             onChange={(event) => setSearchTerm(event.target.value)}
           />
         </label>
@@ -209,13 +208,13 @@ function CommitmentInput({ commitmentData, setCommitmentData, appendChange }) {
           <table className="commitment-table input-commitments-table">
             <thead>
               <tr>
-                <th>Current/New Mgr.</th>
-                <th>Mgr. Name</th>
-                <th>Fund/Co-Investment</th>
-                <th>Investment Name</th>
+                <th>Manager Type</th>
+                <th>Manager</th>
+                <th>Commitment Type</th>
+                <th>Investment</th>
                 <th>Target ($mm)</th>
                 <th>Status</th>
-                <th>Fiscal Year (Actual/Expected)</th>
+                <th>Fiscal Year</th>
                 <th>Actions</th>
               </tr>
             </thead>

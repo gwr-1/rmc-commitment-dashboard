@@ -6,7 +6,7 @@ function Layout({ views, activeView, onViewChange, children }) {
           <span className="brand-tag">RMC</span>
           <h1>Commitment Pipeline Dashboard</h1>
         </div>
-        <div className="header-meta">Prototype | Front-end only</div>
+        <div className="header-meta">Investment Reporting</div>
       </header>
 
       <div className="dashboard-content">

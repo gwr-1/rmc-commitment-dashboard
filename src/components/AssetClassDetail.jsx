@@ -59,8 +59,8 @@ function AssetReportTable({ title, rows, totalLabel, totalAmount }) {
       <table className="asset-report-table">
         <thead>
           <tr>
-            <th>Manager Name</th>
-            <th>Investment Name</th>
+            <th>Manager</th>
+            <th>Investment</th>
             <th>Target ($mm)</th>
           </tr>
         </thead>
@@ -130,8 +130,6 @@ function AssetClassDetail({ commitmentData }) {
       <div className="asset-report-header">
         <div>
           <h2>{assetClassNames[selectedAssetClass]}</h2>
-          <p>Commitment pipeline reporting exhibit</p>
-          <span className="asset-report-updated">Last updated: Prototype data</span>
         </div>
 
         <div className="asset-selector" aria-label="Asset class selector">
@@ -151,7 +149,7 @@ function AssetClassDetail({ commitmentData }) {
       </div>
 
       <div className="chart-container asset-report-chart">
-        <h3>{selectedAssetClass} Metrics by Fiscal Year</h3>
+        <h3>Commitment Activity by Fiscal Year</h3>
         <div className="asset-chart-top-year-row" aria-hidden="true">
           <span>FY26</span>
           <span>FY27</span>

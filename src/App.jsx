@@ -16,7 +16,7 @@ const views = [
   { key: 'change-log', label: 'Change Log' },
 ]
 
-const changedByUser = 'Prototype User'
+const changedByUser = 'Current User'
 
 const getInitialCommitments = () =>
   commitments.map((commitment) => ({

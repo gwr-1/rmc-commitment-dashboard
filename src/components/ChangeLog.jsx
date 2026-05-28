@@ -37,7 +37,6 @@ function ChangeLog({ changeLogRecords }) {
       <div className="view-header-row">
         <div>
           <h2>Change Log</h2>
-          <p>Review field-level edits, additions, and deletions for the commitment pipeline.</p>
         </div>
       </div>
 
@@ -92,7 +91,7 @@ function ChangeLog({ changeLogRecords }) {
           <input
             type="search"
             value={searchTerm}
-            placeholder="Manager or Investment Name"
+            placeholder="Manager or Investment"
             onChange={(event) => setSearchTerm(event.target.value)}
           />
         </label>
@@ -111,7 +110,7 @@ function ChangeLog({ changeLogRecords }) {
                 <th>Timestamp</th>
                 <th>Asset Class</th>
                 <th>Manager</th>
-                <th>Investment Name</th>
+                <th>Investment</th>
                 <th>Change Type</th>
                 <th>Field Changed</th>
                 <th>Old Value</th>
