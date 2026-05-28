@@ -371,11 +371,15 @@ a {
   gap: 8px;
 }
 
+.portfolio-overview-chart h3 {
+  font-size: 2rem;
+}
+
 .overview-chart-top-year-row,
 .overview-chart-year-row {
   display: grid;
   grid-template-columns: 5fr 2fr 2fr;
-  margin: 0 30px 0 42px;
+  margin: 0 40px 0 100px;
 }
 
 .overview-chart-top-year-row {
@@ -389,9 +393,9 @@ a {
 
 .overview-chart-top-year-row span,
 .overview-chart-year-row span {
-  padding: 3px 0;
+  padding: 8px 0;
   color: var(--navy);
-  font-size: 0.9rem;
+  font-size: 1.8rem;
   font-weight: 700;
   text-align: center;
   border-right: 1px solid var(--border-strong);
@@ -414,30 +418,30 @@ a {
 }
 
 .asset-report-header h2 {
-  font-size: 2.1rem;
+  font-size: 2.4rem;
   line-height: 1;
 }
 
 .asset-detail-view .asset-selector-button {
   min-width: 44px;
-  padding: 7px 11px;
-  font-size: 0.82rem;
+  padding: 9px 13px;
+  font-size: 1rem;
 }
 
 .asset-report-chart {
-  gap: 4px;
-  padding: 9px 14px 6px;
+  gap: 7px;
+  padding: 14px 18px 10px;
 }
 
 .asset-report-chart h3 {
-  font-size: 0.98rem;
+  font-size: 1.35rem;
 }
 
 .asset-chart-top-year-row,
 .asset-chart-year-row {
   display: grid;
   grid-template-columns: 5fr 2fr 2fr;
-  margin: 0 18px 0 42px;
+  margin: 0 24px 0 88px;
 }
 
 .asset-chart-top-year-row {
@@ -451,9 +455,9 @@ a {
 
 .asset-chart-top-year-row span,
 .asset-chart-year-row span {
-  padding: 2px 0;
+  padding: 5px 0;
   color: var(--navy);
-  font-size: 0.82rem;
+  font-size: 1.2rem;
   font-weight: 700;
   text-align: center;
   border-right: 1px solid var(--border-strong);
@@ -473,15 +477,15 @@ a {
 .asset-fiscal-column {
   display: grid;
   align-content: start;
-  gap: 5px;
+  gap: 7px;
 }
 
 .asset-fiscal-column h3 {
-  padding: 4px 8px;
+  padding: 7px 10px;
   background: var(--navy);
   color: #ffffff;
   font-family: 'Lato', 'Segoe UI', Arial, sans-serif;
-  font-size: 0.8rem;
+  font-size: 1.1rem;
   font-weight: 700;
   text-align: center;
 }
@@ -492,12 +496,12 @@ a {
 }
 
 .asset-report-table-title {
-  padding: 3px 6px;
+  padding: 6px 8px;
   border: 1px solid var(--border-strong);
   border-bottom: 0;
   background: #e5e7eb;
   color: var(--navy);
-  font-size: 0.66rem;
+  font-size: 0.9rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -512,18 +516,18 @@ a {
 
 .asset-report-table th,
 .asset-report-table td {
-  padding: 3px 5px;
+  padding: 6px 7px;
   border: 1px solid var(--border-strong);
   color: var(--text);
-  font-size: 0.68rem;
-  line-height: 1.15;
+  font-size: 0.88rem;
+  line-height: 1.25;
   vertical-align: top;
 }
 
 .asset-report-table th {
   background: var(--navy);
   color: #ffffff;
-  font-size: 0.62rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: none;
 }

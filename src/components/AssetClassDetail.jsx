@@ -28,9 +28,9 @@ function AssetChartTick({ x, y, payload, data }) {
   const lines = String(item?.displayLabel || payload.value).split(' ')
 
   return (
-    <text x={x} y={y + 8} fill="#00205B" fontSize={11} textAnchor="middle">
+    <text x={x} y={y + 10} fill="#00205B" fontSize={16} textAnchor="middle">
       {lines.map((line, index) => (
-        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 13}>
+        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 19}>
           {line}
         </tspan>
       ))}
@@ -47,7 +47,7 @@ function AssetChartValueLabel({ x, y, width, value }) {
       x={x + width / 2}
       y={labelY}
       fill="#00205B"
-      fontSize={11}
+      fontSize={16}
       fontWeight={700}
       textAnchor="middle"
     >
@@ -185,10 +185,10 @@ function AssetClassDetail({ commitmentData, portfolioMetrics }) {
           <span>FY27</span>
           <span>FY28</span>
         </div>
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={360}>
           <BarChart
             data={assetClassChartData}
-            margin={{ top: 12, right: 18, left: 0, bottom: 46 }}
+            margin={{ top: 26, right: 24, left: 12, bottom: 72 }}
           >
             <ReferenceArea
               x1="FY26-Commitments YTD"
@@ -206,12 +206,13 @@ function AssetClassDetail({ commitmentData, portfolioMetrics }) {
             <XAxis
               dataKey="xKey"
               interval={0}
-              height={58}
+              height={84}
               tick={<AssetChartTick data={assetClassChartData} />}
             />
             <YAxis
-              tick={{ fill: '#374151', fontSize: 11 }}
+              tick={{ fill: '#374151', fontSize: 16 }}
               tickFormatter={(value) => `$${value}`}
+              width={58}
             />
             <Tooltip
               formatter={(value) => [
@@ -228,8 +229,9 @@ function AssetClassDetail({ commitmentData, portfolioMetrics }) {
                 border: '1px solid #d1d5db',
                 borderRadius: '2px',
                 color: '#1f2937',
+                fontSize: '16px',
               }}
-              labelStyle={{ color: '#1f2937' }}
+              labelStyle={{ color: '#1f2937', fontSize: '16px' }}
             />
             <Bar
               dataKey="value"

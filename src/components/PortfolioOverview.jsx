@@ -32,9 +32,9 @@ function OverviewChartTick({ x, y, payload, data }) {
   const lines = String(item?.displayLabel || payload.value).split(' ')
 
   return (
-    <text x={x} y={y + 8} fill="#00205B" fontSize={12} textAnchor="middle">
+    <text x={x} y={y + 12} fill="#00205B" fontSize={24} textAnchor="middle">
       {lines.map((line, index) => (
-        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 14}>
+        <tspan key={`${line}-${index}`} x={x} dy={index === 0 ? 0 : 28}>
           {line}
         </tspan>
       ))}
@@ -51,7 +51,7 @@ function OverviewTotalLabel({ x, y, width, value }) {
       x={x + width / 2}
       y={labelY}
       fill="#00205B"
-      fontSize={12}
+      fontSize={24}
       fontWeight={700}
       textAnchor="middle"
     >
@@ -170,10 +170,10 @@ function PortfolioOverview({ commitmentData, portfolioMetrics }) {
           <span>FY27</span>
           <span>FY28</span>
         </div>
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={700}>
           <BarChart
             data={overviewChartData}
-            margin={{ top: 26, right: 30, left: 0, bottom: 54 }}
+            margin={{ top: 48, right: 40, left: 24, bottom: 118 }}
           >
             <ReferenceArea
               x1="FY26-Commitments YTD"
@@ -191,10 +191,10 @@ function PortfolioOverview({ commitmentData, portfolioMetrics }) {
             <XAxis
               dataKey="xKey"
               interval={0}
-              height={70}
+              height={130}
               tick={<OverviewChartTick data={overviewChartData} />}
             />
-            <YAxis tick={{ fill: '#374151', fontSize: 12 }} />
+            <YAxis tick={{ fill: '#374151', fontSize: 24 }} width={76} />
             <Tooltip
               formatter={(value, name) => [
                 `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 1 })}M`,
@@ -210,14 +210,15 @@ function PortfolioOverview({ commitmentData, portfolioMetrics }) {
                 border: '1px solid #d1d5db',
                 borderRadius: '2px',
                 color: '#1f2937',
+                fontSize: '24px',
               }}
-              labelStyle={{ color: '#1f2937' }}
+              labelStyle={{ color: '#1f2937', fontSize: '24px' }}
             />
             <Legend
               wrapperStyle={{
-                paddingTop: '20px',
+                paddingTop: '28px',
                 color: '#4b5563',
-                fontSize: '13px',
+                fontSize: '26px',
               }}
             />
             <Bar dataKey="PE" stackId="a" fill={overviewBarColors.PE} name="PE">
