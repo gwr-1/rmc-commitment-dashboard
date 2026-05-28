@@ -294,7 +294,8 @@ a {
 .filter-control select,
 .filter-control input,
 .input-commitments-table select,
-.input-commitments-table input {
+.input-commitments-table input,
+.targets-actuals-table input {
   width: 100%;
   min-height: 36px;
   border: 1px solid var(--border-strong);
@@ -308,7 +309,8 @@ a {
 .filter-control select:focus,
 .filter-control input:focus,
 .input-commitments-table select:focus,
-.input-commitments-table input:focus {
+.input-commitments-table input:focus,
+.targets-actuals-table input:focus {
   border-color: var(--blue);
   outline: 2px solid var(--light-blue);
   outline-offset: 0;
@@ -644,17 +646,68 @@ a {
 }
 
 .input-commitments-table {
-  min-width: 1220px;
+  min-width: 1320px;
 }
 
-.input-commitments-table td:nth-child(2),
-.input-commitments-table td:nth-child(4) {
+.input-commitments-table td:nth-child(3),
+.input-commitments-table td:nth-child(5) {
   min-width: 190px;
 }
 
 .input-commitments-table td:nth-child(8) {
+  min-width: 120px;
+  color: var(--text);
+}
+
+.input-commitments-table td:nth-child(9) {
   min-width: 100px;
   color: var(--text);
+}
+
+.targets-actuals-table {
+  min-width: 720px;
+}
+
+.targets-actuals-table th,
+.targets-actuals-table td {
+  padding: 7px 9px;
+}
+
+.targets-actuals-table th:nth-child(1),
+.targets-actuals-table td:nth-child(1) {
+  width: 120px;
+}
+
+.targets-actuals-table th:nth-child(2),
+.targets-actuals-table td:nth-child(2) {
+  width: 190px;
+}
+
+.targets-actuals-table th:nth-child(n + 3),
+.targets-actuals-table td:nth-child(n + 3) {
+  width: 130px;
+}
+
+.targets-actuals-table input {
+  min-height: 30px;
+  padding: 5px 7px;
+}
+
+.targets-actuals-table .asset-matrix-group-start td {
+  border-top: 2px solid var(--border-strong);
+}
+
+.asset-matrix-asset-cell {
+  background: #f3f4f6;
+  color: var(--navy);
+  font-weight: 700;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.asset-matrix-metric-cell {
+  color: var(--navy);
+  font-weight: 700;
 }
 
 .change-log-table {

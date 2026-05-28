@@ -5,18 +5,29 @@ import AssetClassDetail from './components/AssetClassDetail'
 import CommitmentInput from './components/CommitmentInput'
 import ChangeLog from './components/ChangeLog'
 import Snapshots from './components/Snapshots'
+import TargetsActuals from './components/TargetsActuals'
 import { assetClasses, fiscalYears } from './constants'
 import { commitments } from './data/commitments'
 import { changeLog } from './data/changes'
+import { portfolioMetrics } from './data/portfolioMetrics'
 import { isSupabaseConfigured, supabase } from './lib/supabaseClient'
-import { formatTimestamp } from './utils/calculations'
+import {
+  createTargetsActualsRows,
+  formatTimestamp,
+  targetsActualsRowsToPortfolioMetrics,
+} from './utils/calculations'
 import { commitmentSelectColumns, mapSupabaseCommitment } from './utils/commitmentMapping'
+import {
+  mapSupabasePortfolioMetricsToTargetsActuals,
+  portfolioMetricSelectColumns,
+} from './utils/portfolioMetricMapping'
 import './App.css'
 
 const views = [
   { key: 'overview', label: 'Portfolio Overview' },
   { key: 'asset-class', label: 'Asset Class Detail' },
   { key: 'commitment-input', label: 'Commitment Input' },
+  { key: 'targets-actuals', label: 'Targets & Actuals' },
   { key: 'change-log', label: 'Change Log' },
   { key: 'snapshots', label: 'Snapshots' },
 ]
@@ -33,8 +44,19 @@ function App() {
   const [activeView, setActiveView] = useState(views[0].key)
   const [commitmentData, setCommitmentData] = useState(getInitialCommitments)
   const [changeLogRecords, setChangeLogRecords] = useState(changeLog)
+  const [targetsActuals, setTargetsActuals] = useState(() =>
+    createTargetsActualsRows(portfolioMetrics, fiscalYears, assetClasses)
+  )
   const [snapshots, setSnapshots] = useState([])
   const [commitmentsLoadedFromSupabase, setCommitmentsLoadedFromSupabase] = useState(false)
+  const [targetsActualsLoadedFromSupabase, setTargetsActualsLoadedFromSupabase] =
+    useState(false)
+
+  const targetActualMetrics = targetsActualsRowsToPortfolioMetrics(
+    targetsActuals,
+    fiscalYears,
+    assetClasses
+  )
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -59,12 +81,60 @@ function App() {
       }
     }
 
+    const loadPortfolioMetrics = async () => {
+      const { data, error } = await supabase
+        .from('portfolio_metrics')
+        .select(portfolioMetricSelectColumns)
+        .order('fiscal_year', { ascending: true })
+        .order('asset_class', { ascending: true })
+        .order('metric', { ascending: true })
+
+      if (error) {
+        console.error('Failed to load portfolio metrics from Supabase:', error)
+        return
+      }
+
+      if (isMounted) {
+        setTargetsActuals(
+          mapSupabasePortfolioMetricsToTargetsActuals(
+            data || [],
+            fiscalYears,
+            assetClasses
+          )
+        )
+        setTargetsActualsLoadedFromSupabase(true)
+      }
+    }
+
     loadCommitments()
+    loadPortfolioMetrics()
 
     return () => {
       isMounted = false
     }
   }, [])
+
+  const persistTargetActual = async ({ fiscalYear, assetClass, metric, amount }) => {
+    if (!isSupabaseConfigured || !targetsActualsLoadedFromSupabase) return
+
+    try {
+      const { error } = await supabase
+        .from('portfolio_metrics')
+        .update({
+          amount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('fiscal_year', fiscalYear)
+        .eq('asset_class', assetClass)
+        .eq('metric', metric)
+
+      if (error) {
+        console.error('Failed to update portfolio metric in Supabase:', error)
+      }
+    } catch (error) {
+      console.error('Failed to persist portfolio metric to Supabase:', error)
+    }
+  }
 
   const appendChange = (change) => {
     setChangeLogRecords((currentChanges) => [
@@ -114,7 +184,12 @@ function App() {
   const renderView = () => {
     switch (activeView) {
       case 'asset-class':
-        return <AssetClassDetail commitmentData={commitmentData} />
+        return (
+          <AssetClassDetail
+            commitmentData={commitmentData}
+            portfolioMetrics={targetActualMetrics}
+          />
+        )
       case 'commitment-input':
         return (
           <CommitmentInput
@@ -124,12 +199,25 @@ function App() {
             persistEditsToSupabase={commitmentsLoadedFromSupabase}
           />
         )
+      case 'targets-actuals':
+        return (
+          <TargetsActuals
+            targetsActuals={targetsActuals}
+            setTargetsActuals={setTargetsActuals}
+            onPersistTargetActual={persistTargetActual}
+          />
+        )
       case 'change-log':
         return <ChangeLog changeLogRecords={changeLogRecords} />
       case 'snapshots':
         return <Snapshots snapshots={snapshots} onCreateSnapshot={createSnapshot} />
       default:
-        return <PortfolioOverview commitmentData={commitmentData} />
+        return (
+          <PortfolioOverview
+            commitmentData={commitmentData}
+            portfolioMetrics={targetActualMetrics}
+          />
+        )
     }
   }
 

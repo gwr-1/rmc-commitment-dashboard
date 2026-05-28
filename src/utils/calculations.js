@@ -28,6 +28,49 @@ export const calculateCommitmentTotal = (commitments, predicate = () => true) =>
     .filter(predicate)
     .reduce((total, commitment) => total + Number(commitment.targetAmount || 0), 0)
 
+export const targetActualMetricNames = ['Normal Target', 'Calls YTD', 'Distributions YTD']
+
+export const createTargetsActualsRows = (metrics, fiscalYears, assetClasses) =>
+  fiscalYears.flatMap((fiscalYear) =>
+    assetClasses.map((assetClass) => {
+      const row = {
+        id: `${fiscalYear}-${assetClass}`,
+        fiscalYear,
+        assetClass,
+      }
+
+      targetActualMetricNames.forEach((metricName) => {
+        const metricRow = metrics.find(
+          (metric) => metric.fiscalYear === fiscalYear && metric.metric === metricName
+        )
+        row[metricName] = Number(metricRow?.[assetClass] || 0)
+      })
+
+      return row
+    })
+  )
+
+export const targetsActualsRowsToPortfolioMetrics = (rows, fiscalYears, assetClasses) =>
+  fiscalYears.flatMap((fiscalYear) =>
+    targetActualMetricNames.map((metricName) => {
+      const metricRow = {
+        fiscalYear,
+        metric: metricName,
+        Pipeline: 0,
+      }
+
+      assetClasses.forEach((assetClass) => {
+        const row = rows.find(
+          (targetRow) =>
+            targetRow.fiscalYear === fiscalYear && targetRow.assetClass === assetClass
+        )
+        metricRow[assetClass] = Number(row?.[metricName] || 0)
+      })
+
+      return metricRow
+    })
+  )
+
 export const formatTimestamp = (date) =>
   date
     .toLocaleString('en-US', {

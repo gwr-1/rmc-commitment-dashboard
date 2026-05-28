@@ -17,7 +17,6 @@ import {
   assetClassNames,
   fiscalYears,
 } from '../constants'
-import { portfolioMetrics } from '../data/portfolioMetrics'
 import {
   calculateCommitmentTotal,
   isClosedCommitment,
@@ -95,7 +94,7 @@ function AssetReportTable({ title, rows, totalLabel, totalAmount }) {
   )
 }
 
-function AssetClassDetail({ commitmentData }) {
+function AssetClassDetail({ commitmentData, portfolioMetrics }) {
   const [selectedAssetClass, setSelectedAssetClass] = useState('RE')
 
   const filteredCommitments = commitmentData.filter(

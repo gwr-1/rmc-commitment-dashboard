@@ -360,6 +360,7 @@ function CommitmentInput({
             <thead>
               <tr>
                 <th>Manager Type</th>
+                <th>Asset Class</th>
                 <th>Manager</th>
                 <th>Commitment Type</th>
                 <th>Investment</th>
@@ -382,6 +383,20 @@ function CommitmentInput({
                       {managerTypes.map((managerType) => (
                         <option key={managerType} value={managerType}>
                           {managerType}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      value={commitment.assetClass}
+                      onChange={(event) =>
+                        updateCommitment(commitment.id, 'assetClass', event.target.value)
+                      }
+                    >
+                      {assetClasses.map((assetClass) => (
+                        <option key={assetClass} value={assetClass}>
+                          {assetClass}
                         </option>
                       ))}
                     </select>

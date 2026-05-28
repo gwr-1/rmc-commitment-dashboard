@@ -25,6 +25,7 @@ export const assetClassNames = {
 }
 
 export const fieldLabels = {
+  assetClass: 'Asset Class',
   managerType: 'Manager Type',
   manager: 'Manager',
   commitmentType: 'Commitment Type',

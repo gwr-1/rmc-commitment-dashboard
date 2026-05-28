@@ -12,7 +12,6 @@ import {
   ReferenceArea,
 } from 'recharts'
 import { assetChartMetrics, assetClasses } from '../constants'
-import { portfolioMetrics } from '../data/portfolioMetrics'
 import {
   calculateCommitmentTotal,
   calculatePortfolioMetricTotal,
@@ -61,20 +60,7 @@ function OverviewTotalLabel({ x, y, width, value }) {
   )
 }
 
-function PortfolioOverview({ commitmentData }) {
-  const fy26CommitmentsYTD = portfolioMetrics.find(
-    (m) => m.fiscalYear === 'FY26' && m.metric === 'Commitments YTD'
-  )
-  const fy26NormalTarget = portfolioMetrics.find(
-    (m) => m.fiscalYear === 'FY26' && m.metric === 'Normal Target'
-  )
-  const fy27Pipeline = portfolioMetrics.find(
-    (m) => m.fiscalYear === 'FY27' && m.metric === 'Commitment Pipeline'
-  )
-  const fy28Pipeline = portfolioMetrics.find(
-    (m) => m.fiscalYear === 'FY28' && m.metric === 'Commitment Pipeline'
-  )
-
+function PortfolioOverview({ commitmentData, portfolioMetrics }) {
   const getLiveCommitmentRow = (item, predicate = () => true) => {
     const assetClassValues = assetClasses.reduce((values, assetClass) => {
       values[assetClass] = calculateCommitmentTotal(
@@ -139,6 +125,11 @@ function PortfolioOverview({ commitmentData }) {
       />
     ))
 
+  const getChartTotal = (fiscalYear, metric) =>
+    overviewChartData.find(
+      (row) => row.fiscalYear === fiscalYear && row.metric === metric
+    )?.total || 0
+
   return (
     <section className="view-panel">
       <h2>Portfolio Overview</h2>
@@ -146,22 +137,28 @@ function PortfolioOverview({ commitmentData }) {
       <div className="summary-cards-grid">
         <div className="summary-card">
           <span className="summary-label">FY26 Commitments YTD</span>
-          <strong className="summary-value">${calculatePortfolioMetricTotal(fy26CommitmentsYTD)}</strong>
+          <strong className="summary-value">
+            ${getChartTotal('FY26', 'Commitments YTD')}
+          </strong>
           <span className="summary-detail">Millions</span>
         </div>
         <div className="summary-card">
           <span className="summary-label">FY26 Normal Target</span>
-          <strong className="summary-value">${calculatePortfolioMetricTotal(fy26NormalTarget)}</strong>
+          <strong className="summary-value">${getChartTotal('FY26', 'Normal Target')}</strong>
           <span className="summary-detail">Millions</span>
         </div>
         <div className="summary-card">
           <span className="summary-label">FY27 Pipeline</span>
-          <strong className="summary-value">${calculatePortfolioMetricTotal(fy27Pipeline)}</strong>
+          <strong className="summary-value">
+            ${getChartTotal('FY27', 'Commitment Pipeline')}
+          </strong>
           <span className="summary-detail">Millions</span>
         </div>
         <div className="summary-card">
           <span className="summary-label">FY28 Pipeline</span>
-          <strong className="summary-value">${calculatePortfolioMetricTotal(fy28Pipeline)}</strong>
+          <strong className="summary-value">
+            ${getChartTotal('FY28', 'Commitment Pipeline')}
+          </strong>
           <span className="summary-detail">Millions</span>
         </div>
       </div>
