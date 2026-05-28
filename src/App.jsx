@@ -4,6 +4,8 @@ import PortfolioOverview from './components/PortfolioOverview'
 import AssetClassDetail from './components/AssetClassDetail'
 import CommitmentInput from './components/CommitmentInput'
 import ChangeLog from './components/ChangeLog'
+import Snapshots from './components/Snapshots'
+import { assetClasses, fiscalYears } from './constants'
 import { commitments } from './data/commitments'
 import { changeLog } from './data/changes'
 import { formatTimestamp } from './utils/calculations'
@@ -14,6 +16,7 @@ const views = [
   { key: 'asset-class', label: 'Asset Class Detail' },
   { key: 'commitment-input', label: 'Commitment Input' },
   { key: 'change-log', label: 'Change Log' },
+  { key: 'snapshots', label: 'Snapshots' },
 ]
 
 const changedByUser = 'Current User'
@@ -28,6 +31,7 @@ function App() {
   const [activeView, setActiveView] = useState(views[0].key)
   const [commitmentData, setCommitmentData] = useState(getInitialCommitments)
   const [changeLogRecords, setChangeLogRecords] = useState(changeLog)
+  const [snapshots, setSnapshots] = useState([])
 
   const appendChange = (change) => {
     setChangeLogRecords((currentChanges) => [
@@ -39,6 +43,39 @@ function App() {
       },
       ...currentChanges,
     ])
+  }
+
+  const createSnapshot = (snapshotName) => {
+    const copiedCommitments = commitmentData.map((commitment) => ({ ...commitment }))
+    const totalByFiscalYear = fiscalYears.reduce((totals, fiscalYear) => {
+      totals[fiscalYear] = copiedCommitments
+        .filter((commitment) => commitment.fiscalYear === fiscalYear)
+        .reduce((total, commitment) => total + commitment.targetAmount, 0)
+      return totals
+    }, {})
+    const totalByAssetClass = assetClasses.reduce((totals, assetClass) => {
+      totals[assetClass] = copiedCommitments
+        .filter((commitment) => commitment.assetClass === assetClass)
+        .reduce((total, commitment) => total + commitment.targetAmount, 0)
+      return totals
+    }, {})
+    const snapshot = {
+      id: `SNP-${Date.now()}`,
+      name: snapshotName || `Snapshot ${snapshots.length + 1}`,
+      createdAt: formatTimestamp(new Date()),
+      createdBy: 'Investment Team',
+      commitments: copiedCommitments,
+      totalCommitments: copiedCommitments.reduce(
+        (total, commitment) => total + commitment.targetAmount,
+        0
+      ),
+      commitmentCount: copiedCommitments.length,
+      totalByFiscalYear,
+      totalByAssetClass,
+    }
+
+    setSnapshots((currentSnapshots) => [snapshot, ...currentSnapshots])
+    return snapshot.id
   }
 
   const renderView = () => {
@@ -55,6 +92,8 @@ function App() {
         )
       case 'change-log':
         return <ChangeLog changeLogRecords={changeLogRecords} />
+      case 'snapshots':
+        return <Snapshots snapshots={snapshots} onCreateSnapshot={createSnapshot} />
       default:
         return <PortfolioOverview />
     }

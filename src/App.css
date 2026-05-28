@@ -577,6 +577,16 @@ a {
   padding: 16px;
 }
 
+.snapshot-create-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
 .commitment-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);
@@ -661,6 +671,87 @@ a {
   color: var(--text);
 }
 
+.snapshot-table {
+  min-width: 1180px;
+}
+
+.snapshot-table tbody tr {
+  cursor: pointer;
+}
+
+.snapshot-table tbody tr:hover,
+.snapshot-table tbody tr.selected-row {
+  background: #eff6ff;
+}
+
+.snapshot-commitment-table {
+  min-width: 980px;
+}
+
+.snapshot-detail-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.snapshot-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.snapshot-detail-header h3 {
+  margin-bottom: 2px;
+}
+
+.snapshot-total-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.snapshot-total-panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.snapshot-total-panel h3 {
+  padding: 8px 10px;
+  background: var(--navy);
+  color: #ffffff;
+  font-family: 'Lato', 'Segoe UI', Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.snapshot-total-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.snapshot-total-table th,
+.snapshot-total-table td {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.snapshot-total-table th {
+  width: 50%;
+  text-align: left;
+  color: var(--navy);
+}
+
+.snapshot-total-table td {
+  text-align: right;
+}
+
 .change-type-pill {
   display: inline-flex;
   align-items: center;
@@ -734,6 +825,11 @@ a {
 
   .input-controls-panel {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .snapshot-create-panel,
+  .snapshot-total-grid {
+    grid-template-columns: 1fr;
   }
 
   .search-control {
