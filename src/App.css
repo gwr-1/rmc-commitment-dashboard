@@ -16,7 +16,6 @@
   --border-strong: #9ca3af;
   --danger: #b91c1c;
   --success: #166534;
-  --warning: #92400e;
 }
 
 * {
@@ -325,52 +324,11 @@ a {
   color: #6b7280;
 }
 
-.panel-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.metric-card,
-.placeholder-box,
 .summary-card,
 .chart-container,
-.fiscal-year-panel,
 .commitment-input-panel {
   background: var(--surface);
   border: 1px solid var(--border);
-}
-
-.metric-card,
-.placeholder-box {
-  padding: 22px;
-}
-
-.metric-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.metric-label {
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.metric-card strong {
-  color: var(--navy);
-  font-size: 1.8rem;
-}
-
-.placeholder-box {
-  min-height: 220px;
-  display: grid;
-  place-items: center;
-  color: var(--text-muted);
-  text-align: center;
 }
 
 .summary-cards-grid {
@@ -384,10 +342,6 @@ a {
   flex-direction: column;
   gap: 7px;
   padding: 18px;
-}
-
-.summary-card-total {
-  border-color: var(--navy);
 }
 
 .summary-label {
@@ -583,19 +537,6 @@ a {
   font-weight: 700;
 }
 
-.fiscal-year-sections {
-  display: grid;
-  gap: 18px;
-}
-
-.fiscal-year-panel {
-  display: grid;
-  gap: 18px;
-  padding: 20px;
-}
-
-.fiscal-year-heading,
-.table-group-heading,
 .input-table-meta {
   display: flex;
   justify-content: space-between;
@@ -603,23 +544,9 @@ a {
   align-items: center;
 }
 
-.fiscal-year-heading span,
-.table-group-heading span,
-.record-count,
 .input-table-meta {
   color: var(--text-muted);
   font-size: 0.88rem;
-}
-
-.record-count {
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  background: var(--surface-alt);
-}
-
-.commitment-table-group {
-  display: grid;
-  gap: 10px;
 }
 
 .commitment-input-panel {
@@ -712,7 +639,6 @@ a {
   color: var(--text);
 }
 
-.status-pill,
 .change-type-pill {
   display: inline-flex;
   align-items: center;
@@ -724,27 +650,18 @@ a {
   white-space: nowrap;
 }
 
-.status-closed,
 .change-added {
   background: #ecfdf3;
   color: var(--success);
   border-color: #bbf7d0;
 }
 
-.status-delayed {
-  background: #fffbeb;
-  color: var(--warning);
-  border-color: #fde68a;
-}
-
-.status-under-review,
 .change-edited {
   background: #eff6ff;
   color: var(--blue);
   border-color: #bfdbfe;
 }
 
-.status-removed,
 .change-deleted {
   background: #fef2f2;
   color: var(--danger);
@@ -775,10 +692,6 @@ a {
 
   .main-panel {
     min-height: auto;
-  }
-
-  .panel-grid {
-    grid-template-columns: 1fr;
   }
 
   .summary-cards-grid {
@@ -841,15 +754,12 @@ a {
     width: 100%;
   }
 
-  .input-table-meta,
-  .fiscal-year-heading,
-  .table-group-heading {
+  .input-table-meta {
     align-items: flex-start;
     flex-direction: column;
     gap: 6px;
   }
 
-  .fiscal-year-panel,
   .chart-container,
   .commitment-input-panel {
     padding: 16px;

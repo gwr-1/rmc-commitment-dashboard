@@ -47,6 +47,17 @@ const fieldLabels = {
   fiscalYear: 'Fiscal Year (Actual/Expected)',
 }
 
+const assetChartMetrics = [
+  { fiscalYear: 'FY26', metric: 'Commitments YTD', displayLabel: 'Commitments YTD' },
+  { fiscalYear: 'FY26', metric: 'Normal Target' },
+  { fiscalYear: 'FY26', metric: 'Calls YTD' },
+  { fiscalYear: 'FY26', metric: 'Distributions YTD', displayLabel: 'Dist. YTD' },
+  { fiscalYear: 'FY27', metric: 'Commitment Pipeline' },
+  { fiscalYear: 'FY27', metric: 'Normal Target' },
+  { fiscalYear: 'FY28', metric: 'Commitment Pipeline' },
+  { fiscalYear: 'FY28', metric: 'Normal Target' },
+]
+
 const formatMillions = (amount) => `$${(amount / 1000000).toFixed(0)}M`
 const toMillions = (amount) => amount / 1000000
 const changedByUser = 'Prototype User'
@@ -212,18 +223,7 @@ function AssetClassDetail({ commitmentData }) {
     (commitment) => commitment.assetClass === selectedAssetClass
   )
 
-  const chartMetricOrder = [
-    { fiscalYear: 'FY26', metric: 'Commitments YTD', displayLabel: 'Commitments YTD' },
-    { fiscalYear: 'FY26', metric: 'Normal Target' },
-    { fiscalYear: 'FY26', metric: 'Calls YTD' },
-    { fiscalYear: 'FY26', metric: 'Distributions YTD', displayLabel: 'Dist. YTD' },
-    { fiscalYear: 'FY27', metric: 'Commitment Pipeline' },
-    { fiscalYear: 'FY27', metric: 'Normal Target' },
-    { fiscalYear: 'FY28', metric: 'Commitment Pipeline' },
-    { fiscalYear: 'FY28', metric: 'Normal Target' },
-  ]
-
-  const assetClassChartData = chartMetricOrder.map((item) => {
+  const assetClassChartData = assetChartMetrics.map((item) => {
     const metricRow = portfolioMetrics.find(
       (row) => row.fiscalYear === item.fiscalYear && row.metric === item.metric
     )
