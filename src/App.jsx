@@ -45,6 +45,7 @@ function App() {
   const [commitmentData, setCommitmentData] = useState(getInitialCommitments)
   const [changeLogRecords, setChangeLogRecords] = useState(changeLog)
   const [snapshots, setSnapshots] = useState([])
+  const [commitmentsLoadedFromSupabase, setCommitmentsLoadedFromSupabase] = useState(false)
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -67,6 +68,7 @@ function App() {
 
       if (isMounted) {
         setCommitmentData((data || []).map(mapSupabaseCommitment))
+        setCommitmentsLoadedFromSupabase(true)
       }
     }
 
@@ -132,6 +134,7 @@ function App() {
             commitmentData={commitmentData}
             setCommitmentData={setCommitmentData}
             appendChange={appendChange}
+            persistEditsToSupabase={commitmentsLoadedFromSupabase}
           />
         )
       case 'change-log':
