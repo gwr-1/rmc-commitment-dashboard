@@ -39,6 +39,17 @@ function SnapshotDetails({ snapshot }) {
         <span>{snapshot.createdBy}</span>
       </div>
 
+      <div className="snapshot-summary-grid">
+        <div>
+          <span>Total Commitments</span>
+          <strong>{formatMillions(snapshot.totalCommitments)}</strong>
+        </div>
+        <div>
+          <span>Commitment Count</span>
+          <strong>{snapshot.commitmentCount}</strong>
+        </div>
+      </div>
+
       <div className="snapshot-total-grid">
         <SnapshotTotals
           title="Totals by Asset Class"
@@ -99,6 +110,11 @@ function Snapshots({ snapshots, onCreateSnapshot }) {
     <section className="view-panel">
       <div className="view-header-row">
         <h2>Snapshots</h2>
+        {selectedSnapshot && (
+          <button type="button" className="primary-action-button print-action-button" onClick={() => window.print()}>
+            Print Snapshot
+          </button>
+        )}
       </div>
 
       <div className="snapshot-create-panel">
