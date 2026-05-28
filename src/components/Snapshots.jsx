@@ -95,10 +95,17 @@ function SnapshotDetails({ snapshot }) {
   )
 }
 
-function Snapshots({ snapshots, onCreateSnapshot }) {
+function Snapshots({ snapshots, onCreateSnapshot, onRenameSnapshot, onDeleteSnapshot }) {
   const [snapshotName, setSnapshotName] = useState('')
   const [selectedSnapshotId, setSelectedSnapshotId] = useState(null)
+  const [renameDraft, setRenameDraft] = useState({ snapshotId: null, value: '' })
+  const [managementError, setManagementError] = useState('')
+  const [isManagingSnapshot, setIsManagingSnapshot] = useState(false)
   const selectedSnapshot = snapshots.find((snapshot) => snapshot.id === selectedSnapshotId)
+  const renameValue =
+    selectedSnapshot && renameDraft.snapshotId === selectedSnapshot.id
+      ? renameDraft.value
+      : selectedSnapshot?.name || ''
 
   const handleCreateSnapshot = async () => {
     const snapshotId = await onCreateSnapshot(snapshotName.trim())
@@ -106,6 +113,50 @@ function Snapshots({ snapshots, onCreateSnapshot }) {
 
     setSelectedSnapshotId(snapshotId)
     setSnapshotName('')
+  }
+
+  const selectSnapshot = (snapshotId) => {
+    setSelectedSnapshotId(snapshotId)
+    setManagementError('')
+  }
+
+  const handleRenameSnapshot = async () => {
+    if (!selectedSnapshot) return
+
+    const nextName = renameValue.trim()
+    if (!nextName) {
+      setManagementError('Snapshot name is required.')
+      return
+    }
+
+    setIsManagingSnapshot(true)
+    const didRename = await onRenameSnapshot(selectedSnapshot.id, nextName)
+    setIsManagingSnapshot(false)
+
+    if (!didRename) {
+      setManagementError('Snapshot could not be renamed.')
+      return
+    }
+
+    setManagementError('')
+    setRenameDraft({ snapshotId: selectedSnapshot.id, value: nextName })
+  }
+
+  const handleDeleteSnapshot = async () => {
+    if (!selectedSnapshot) return
+    if (!window.confirm(`Delete "${selectedSnapshot.name}"?`)) return
+
+    setIsManagingSnapshot(true)
+    const didDelete = await onDeleteSnapshot(selectedSnapshot.id)
+    setIsManagingSnapshot(false)
+
+    if (!didDelete) {
+      setManagementError('Snapshot could not be deleted.')
+      return
+    }
+
+    setSelectedSnapshotId(null)
+    setRenameDraft({ snapshotId: null, value: '' })
   }
 
   return (
@@ -134,6 +185,41 @@ function Snapshots({ snapshots, onCreateSnapshot }) {
         </button>
       </div>
 
+      {selectedSnapshot && (
+        <div className="snapshot-management-panel">
+          <label className="filter-control">
+            <span>Selected Snapshot</span>
+            <input
+              type="text"
+              value={renameValue}
+              onChange={(event) =>
+                setRenameDraft({
+                  snapshotId: selectedSnapshot.id,
+                  value: event.target.value,
+                })
+              }
+            />
+          </label>
+          <button
+            type="button"
+            className="primary-action-button"
+            onClick={handleRenameSnapshot}
+            disabled={isManagingSnapshot}
+          >
+            Rename
+          </button>
+          <button
+            type="button"
+            className="danger-action-button"
+            onClick={handleDeleteSnapshot}
+            disabled={isManagingSnapshot}
+          >
+            Delete
+          </button>
+          {managementError && <div className="snapshot-management-error">{managementError}</div>}
+        </div>
+      )}
+
       <div className="commitment-input-panel">
         <div className="input-table-meta">
           <span>{snapshots.length} saved snapshots</span>
@@ -158,7 +244,7 @@ function Snapshots({ snapshots, onCreateSnapshot }) {
                 <tr
                   key={snapshot.id}
                   className={selectedSnapshotId === snapshot.id ? 'selected-row' : ''}
-                  onClick={() => setSelectedSnapshotId(snapshot.id)}
+                  onClick={() => selectSnapshot(snapshot.id)}
                 >
                   <td>{snapshot.name}</td>
                   <td>{snapshot.createdAt}</td>

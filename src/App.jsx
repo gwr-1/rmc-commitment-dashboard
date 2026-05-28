@@ -298,6 +298,66 @@ function App() {
     return snapshot.id
   }
 
+  const renameSnapshot = async (snapshotId, snapshotName) => {
+    const nextName = snapshotName.trim()
+    if (!nextName) return false
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('snapshots')
+          .update({ name: nextName })
+          .eq('id', snapshotId)
+          .select(snapshotSelectColumns)
+          .single()
+
+        if (error) {
+          console.error('Failed to rename snapshot in Supabase:', error)
+          return false
+        }
+
+        const updatedSnapshot = mapSupabaseSnapshot(data)
+        setSnapshots((currentSnapshots) =>
+          currentSnapshots.map((snapshot) =>
+            snapshot.id === snapshotId ? updatedSnapshot : snapshot
+          )
+        )
+        return true
+      } catch (error) {
+        console.error('Failed to persist snapshot rename to Supabase:', error)
+        return false
+      }
+    }
+
+    setSnapshots((currentSnapshots) =>
+      currentSnapshots.map((snapshot) =>
+        snapshot.id === snapshotId ? { ...snapshot, name: nextName } : snapshot
+      )
+    )
+    return true
+  }
+
+  const deleteSnapshot = async (snapshotId) => {
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.from('snapshots').delete().eq('id', snapshotId)
+
+        if (error) {
+          console.error('Failed to delete snapshot in Supabase:', error)
+          return false
+        }
+      } catch (error) {
+        console.error('Failed to persist snapshot delete to Supabase:', error)
+        return false
+      }
+    }
+
+    setSnapshots((currentSnapshots) =>
+      currentSnapshots.filter((snapshot) => snapshot.id !== snapshotId)
+    )
+    return true
+  }
+
   const renderView = () => {
     switch (activeView) {
       case 'asset-class':
@@ -327,7 +387,14 @@ function App() {
       case 'change-log':
         return <ChangeLog changeLogRecords={changeLogRecords} />
       case 'snapshots':
-        return <Snapshots snapshots={snapshots} onCreateSnapshot={createSnapshot} />
+        return (
+          <Snapshots
+            snapshots={snapshots}
+            onCreateSnapshot={createSnapshot}
+            onRenameSnapshot={renameSnapshot}
+            onDeleteSnapshot={deleteSnapshot}
+          />
+        )
       default:
         return (
           <PortfolioOverview

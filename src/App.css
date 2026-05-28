@@ -710,6 +710,22 @@ a {
   border: 1px solid var(--border);
 }
 
+.snapshot-management-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) auto auto minmax(180px, 1fr);
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.snapshot-management-error {
+  align-self: center;
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
 .commitment-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);
