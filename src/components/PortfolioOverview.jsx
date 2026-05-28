@@ -6,10 +6,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   LabelList,
   ReferenceArea,
+  ReferenceDot,
 } from 'recharts'
 import { assetChartMetrics, assetClasses } from '../constants'
 import {
@@ -27,6 +27,12 @@ const overviewBarColors = {
   Pipeline: 'rgba(122, 199, 255, 0.4)',
 }
 
+const minimumSegmentLabelHeight = 18
+const minimumSegmentLabelWidth = 44
+
+const formatWholeMillions = (amount) =>
+  Number(amount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })
+
 function OverviewChartTick({ x, y, payload, data }) {
   const item = data.find((row) => row.xKey === payload.value)
   const lines = String(item?.displayLabel || payload.value).split(' ')
@@ -42,34 +48,99 @@ function OverviewChartTick({ x, y, payload, data }) {
   )
 }
 
-function OverviewTotalLabel({ x, y, width, value }) {
-  const numericValue = Number(value)
-  const labelY = numericValue === 0 ? y - 5 : Math.max(y - 8, 12)
+function OverviewSegmentLabel({ x, y, width, height, value, index, assetClass, data }) {
+  const numericValue = Number(value || 0)
+  const label = `${assetClass} - $${formatWholeMillions(numericValue)}`
+  const isOutlinedBar = data[index]?.isPipelineOutline
+
+  if (
+    numericValue <= 0 ||
+    height < minimumSegmentLabelHeight ||
+    width < minimumSegmentLabelWidth
+  ) {
+    return null
+  }
 
   return (
     <text
       x={x + width / 2}
-      y={labelY}
-      fill="#00205B"
-      fontSize={24}
+      y={y + height / 2}
+      fill={isOutlinedBar ? '#00205B' : '#ffffff'}
+      fontSize={15}
       fontWeight={700}
       textAnchor="middle"
+      dominantBaseline="middle"
     >
-      {`$${numericValue.toLocaleString('en-US', { maximumFractionDigits: 1 })}M`}
+      {label}
     </text>
   )
 }
 
+function OverviewTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null
+
+  const row = payload[0].payload
+
+  return (
+    <div className="overview-tooltip">
+      <div className="overview-tooltip-title">
+        {row.fiscalYear} - {row.displayLabel}
+      </div>
+      <div className="overview-tooltip-subtitle">
+        {row.detailSource === 'live'
+          ? 'Live commitments'
+          : 'Targets & Actuals values'}
+      </div>
+      <div className="overview-tooltip-groups">
+        {assetClasses
+          .filter((assetClass) => Number(row[assetClass] || 0) > 0)
+          .map((assetClass) => {
+            const commitments = row.commitmentsByAssetClass?.[assetClass] || []
+
+            return (
+              <div className="overview-tooltip-group" key={assetClass}>
+                <div className="overview-tooltip-group-title">
+                  <span>{assetClass}</span>
+                  <strong>${formatWholeMillions(row[assetClass])}</strong>
+                </div>
+                {commitments.length > 0 ? (
+                  <ul>
+                    {commitments.map((commitment) => (
+                      <li key={commitment.id}>
+                        <span>
+                          {commitment.manager} - {commitment.investmentName}
+                        </span>
+                        <strong>${formatWholeMillions(commitment.targetAmount)}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Fund-level detail is not available for Targets & Actuals.</p>
+                )}
+              </div>
+            )
+          })}
+      </div>
+    </div>
+  )
+}
+
 function PortfolioOverview({ commitmentData, portfolioMetrics }) {
-  const getLiveCommitmentRow = (item, predicate = () => true) => {
-    const assetClassValues = assetClasses.reduce((values, assetClass) => {
-      values[assetClass] = calculateCommitmentTotal(
-        commitmentData,
+  const getLiveCommitmentsByAssetClass = (item, predicate = () => true) =>
+    assetClasses.reduce((groups, assetClass) => {
+      groups[assetClass] = commitmentData.filter(
         (commitment) =>
           commitment.assetClass === assetClass &&
           commitment.fiscalYear === item.fiscalYear &&
           predicate(commitment)
       )
+      return groups
+    }, {})
+
+  const getLiveCommitmentRow = (item, predicate = () => true) => {
+    const commitmentsByAssetClass = getLiveCommitmentsByAssetClass(item, predicate)
+    const assetClassValues = assetClasses.reduce((values, assetClass) => {
+      values[assetClass] = calculateCommitmentTotal(commitmentsByAssetClass[assetClass])
       return values
     }, {})
 
@@ -78,6 +149,8 @@ function PortfolioOverview({ commitmentData, portfolioMetrics }) {
       metric: item.metric,
       ...assetClassValues,
       Pipeline: 0,
+      detailSource: 'live',
+      commitmentsByAssetClass,
     }
   }
 
@@ -97,9 +170,13 @@ function PortfolioOverview({ commitmentData, portfolioMetrics }) {
       return getLiveCommitmentRow(item)
     }
 
-    return portfolioMetrics.find(
-      (row) => row.fiscalYear === item.fiscalYear && row.metric === item.metric
-    )
+    return {
+      ...portfolioMetrics.find(
+        (row) => row.fiscalYear === item.fiscalYear && row.metric === item.metric
+      ),
+      detailSource: 'targetsActuals',
+      commitmentsByAssetClass: {},
+    }
   }
 
   const overviewChartData = assetChartMetrics.map((item) => {
@@ -125,44 +202,16 @@ function PortfolioOverview({ commitmentData, portfolioMetrics }) {
       />
     ))
 
-  const getChartTotal = (fiscalYear, metric) =>
-    overviewChartData.find(
-      (row) => row.fiscalYear === fiscalYear && row.metric === metric
-    )?.total || 0
+  const renderSegmentLabel = (assetClass) => (labelProps) => (
+    <OverviewSegmentLabel
+      {...labelProps}
+      assetClass={assetClass}
+      data={overviewChartData}
+    />
+  )
 
   return (
-    <section className="view-panel">
-      <h2>Portfolio Overview</h2>
-
-      <div className="summary-cards-grid">
-        <div className="summary-card">
-          <span className="summary-label">FY26 Commitments YTD</span>
-          <strong className="summary-value">
-            ${getChartTotal('FY26', 'Commitments YTD')}
-          </strong>
-          <span className="summary-detail">Millions</span>
-        </div>
-        <div className="summary-card">
-          <span className="summary-label">FY26 Normal Target</span>
-          <strong className="summary-value">${getChartTotal('FY26', 'Normal Target')}</strong>
-          <span className="summary-detail">Millions</span>
-        </div>
-        <div className="summary-card">
-          <span className="summary-label">FY27 Pipeline</span>
-          <strong className="summary-value">
-            ${getChartTotal('FY27', 'Commitment Pipeline')}
-          </strong>
-          <span className="summary-detail">Millions</span>
-        </div>
-        <div className="summary-card">
-          <span className="summary-label">FY28 Pipeline</span>
-          <strong className="summary-value">
-            ${getChartTotal('FY28', 'Commitment Pipeline')}
-          </strong>
-          <span className="summary-detail">Millions</span>
-        </div>
-      </div>
-
+    <section className="view-panel portfolio-overview-view">
       <div className="chart-container portfolio-overview-chart">
         <h3>Portfolio Commitments by Fiscal Year</h3>
         <div className="overview-chart-top-year-row" aria-hidden="true">
@@ -170,71 +219,76 @@ function PortfolioOverview({ commitmentData, portfolioMetrics }) {
           <span>FY27</span>
           <span>FY28</span>
         </div>
-        <ResponsiveContainer width="100%" height={700}>
+        <ResponsiveContainer width="100%" height={720}>
           <BarChart
             data={overviewChartData}
-            margin={{ top: 48, right: 40, left: 24, bottom: 118 }}
+            margin={{ top: 54, right: 42, left: 24, bottom: 82 }}
           >
             <ReferenceArea
               x1="FY26-Commitments YTD"
               x2="FY26-Distributions YTD"
-              fill="#f7f8fa"
+              fill="#f3f4f6"
               strokeOpacity={0}
             />
             <ReferenceArea
               x1="FY28-Commitment Pipeline"
               x2="FY28-Normal Target"
-              fill="#f7f8fa"
+              fill="#f3f4f6"
               strokeOpacity={0}
             />
             <CartesianGrid strokeDasharray="3 3" stroke="#d1d5db" />
             <XAxis
               dataKey="xKey"
               interval={0}
-              height={130}
+              height={104}
               tick={<OverviewChartTick data={overviewChartData} />}
             />
-            <YAxis tick={{ fill: '#374151', fontSize: 24 }} width={76} />
-            <Tooltip
-              formatter={(value, name) => [
-                `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 1 })}M`,
-                name,
-              ]}
-              labelFormatter={(label, payload) =>
-                payload?.[0]?.payload
-                  ? `${payload[0].payload.fiscalYear} - ${payload[0].payload.displayLabel}`
-                  : label
-              }
-              contentStyle={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #d1d5db',
-                borderRadius: '2px',
-                color: '#1f2937',
-                fontSize: '24px',
-              }}
-              labelStyle={{ color: '#1f2937', fontSize: '24px' }}
+            <YAxis
+              tick={{ fill: '#374151', fontSize: 24 }}
+              width={76}
+              domain={[0, (dataMax) => Math.ceil(Number(dataMax || 0) * 1.12)]}
             />
-            <Legend
-              wrapperStyle={{
-                paddingTop: '28px',
-                color: '#4b5563',
-                fontSize: '26px',
-              }}
-            />
+            <Tooltip content={<OverviewTooltip />} />
+            {overviewChartData
+              .filter((row) => Number(row.total || 0) > 0)
+              .map((row) => (
+                <ReferenceDot
+                  key={`${row.xKey}-total-label`}
+                  x={row.xKey}
+                  y={row.total}
+                  r={0}
+                  ifOverflow="extendDomain"
+                  label={{
+                    value: `$${formatWholeMillions(row.total)}`,
+                    position: 'top',
+                    fill: '#00205B',
+                    fontSize: 24,
+                    fontWeight: 700,
+                  }}
+                />
+              ))}
             <Bar dataKey="PE" stackId="a" fill={overviewBarColors.PE} name="PE">
               {renderCells('PE')}
+              <LabelList dataKey="PE" content={renderSegmentLabel('PE')} />
             </Bar>
             <Bar dataKey="VC" stackId="a" fill={overviewBarColors.VC} name="VC">
               {renderCells('VC')}
+              <LabelList dataKey="VC" content={renderSegmentLabel('VC')} />
             </Bar>
             <Bar dataKey="NR" stackId="a" fill={overviewBarColors.NR} name="NR">
               {renderCells('NR')}
+              <LabelList dataKey="NR" content={renderSegmentLabel('NR')} />
             </Bar>
             <Bar dataKey="RE" stackId="a" fill={overviewBarColors.RE} name="RE">
               {renderCells('RE')}
+              <LabelList dataKey="RE" content={renderSegmentLabel('RE')} />
             </Bar>
             <Bar dataKey="NMA" stackId="a" fill={overviewBarColors.NMA} name="NMA">
               {renderCells('NMA')}
+              <LabelList
+                dataKey="NMA"
+                content={renderSegmentLabel('NMA')}
+              />
             </Bar>
             <Bar
               dataKey="Pipeline"
@@ -243,15 +297,9 @@ function PortfolioOverview({ commitmentData, portfolioMetrics }) {
               name="Pipeline"
             >
               {renderCells('Pipeline')}
-              <LabelList dataKey="total" content={<OverviewTotalLabel />} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-        <div className="overview-chart-year-row" aria-hidden="true">
-          <span>FY26</span>
-          <span>FY27</span>
-          <span>FY28</span>
-        </div>
       </div>
     </section>
   )
