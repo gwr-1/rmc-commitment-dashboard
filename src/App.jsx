@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import AuthGate from './components/AuthGate'
 import Layout from './components/Layout'
 import PortfolioOverview from './components/PortfolioOverview'
 import AssetClassDetail from './components/AssetClassDetail'
@@ -51,6 +52,8 @@ const isMissingColumnError = (error, columnName) =>
 
 function App() {
   const [activeView, setActiveView] = useState(views[0].key)
+  const [session, setSession] = useState(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(isSupabaseConfigured)
   const [commitmentData, setCommitmentData] = useState(getInitialCommitments)
   const [changeLogRecords, setChangeLogRecords] = useState(changeLog)
   const [targetsActuals, setTargetsActuals] = useState(() =>
@@ -69,6 +72,39 @@ function App() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
+
+    let isMounted = true
+
+    const loadSession = async () => {
+      const { data, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('Failed to load Supabase auth session:', error)
+      }
+
+      if (isMounted) {
+        setSession(data?.session || null)
+        setIsAuthLoading(false)
+      }
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+      setIsAuthLoading(false)
+    })
+
+    loadSession()
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !session) return
 
     let isMounted = true
 
@@ -171,7 +207,7 @@ function App() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [session])
 
   const persistPortfolioMetric = async ({ fiscalYear, assetClass, metric, amount }) => {
     if (!isSupabaseConfigured || !targetsActualsLoadedFromSupabase) return
@@ -302,8 +338,42 @@ function App() {
     }
   }
 
+  const logout = async () => {
+    if (!isSupabaseConfigured) return
+
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      console.error('Failed to sign out of Supabase:', error)
+    }
+  }
+
+  if (isAuthLoading) {
+    return (
+      <main className="auth-shell">
+        <section className="auth-panel auth-loading-panel">
+          <div className="brand-block auth-brand">
+            <span className="brand-tag">RMC</span>
+            <h1>Commitment Pipeline Dashboard</h1>
+          </div>
+          <div className="auth-message">Checking session...</div>
+        </section>
+      </main>
+    )
+  }
+
+  if (isSupabaseConfigured && !session) {
+    return <AuthGate />
+  }
+
   return (
-    <Layout views={views} activeView={activeView} onViewChange={setActiveView}>
+    <Layout
+      views={views}
+      activeView={activeView}
+      onViewChange={setActiveView}
+      onLogout={logout}
+      userEmail={session?.user?.email}
+    >
       {renderView()}
     </Layout>
   )

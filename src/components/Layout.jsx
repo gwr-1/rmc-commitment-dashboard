@@ -1,4 +1,4 @@
-function Layout({ views, activeView, onViewChange, children }) {
+function Layout({ views, activeView, onViewChange, onLogout, userEmail, children }) {
   return (
     <div className="dashboard-shell">
       <header className="dashboard-header">
@@ -6,7 +6,14 @@ function Layout({ views, activeView, onViewChange, children }) {
           <span className="brand-tag">RMC</span>
           <h1>Commitment Pipeline Dashboard</h1>
         </div>
-        <div className="header-meta">Investment Reporting</div>
+        <div className="header-actions">
+          <div className="header-meta">{userEmail || 'Investment Reporting'}</div>
+          {onLogout && (
+            <button type="button" className="logout-button" onClick={onLogout}>
+              Log Out
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="dashboard-content">
