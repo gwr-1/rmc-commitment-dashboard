@@ -17,10 +17,12 @@ function ChangeLog({ changeLogRecords }) {
     const matchesChangeType =
       filters.changeType === 'All' || change.changeType === filters.changeType
     const normalizedSearch = searchTerm.trim().toLowerCase()
+    const manager = change.manager || ''
+    const investmentName = change.investmentName || ''
     const matchesSearch =
       normalizedSearch.length === 0 ||
-      change.manager.toLowerCase().includes(normalizedSearch) ||
-      change.investmentName.toLowerCase().includes(normalizedSearch)
+      manager.toLowerCase().includes(normalizedSearch) ||
+      investmentName.toLowerCase().includes(normalizedSearch)
 
     return matchesAssetClass && matchesFiscalYear && matchesChangeType && matchesSearch
   })
@@ -126,7 +128,9 @@ function ChangeLog({ changeLogRecords }) {
                   <td>{change.manager}</td>
                   <td>{change.investmentName}</td>
                   <td>
-                    <span className={`change-type-pill change-${change.changeType.toLowerCase()}`}>
+                    <span
+                      className={`change-type-pill change-${change.changeType.toLowerCase()}`}
+                    >
                       {change.changeType}
                     </span>
                   </td>

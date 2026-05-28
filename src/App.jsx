@@ -16,11 +16,17 @@ import {
   formatTimestamp,
   targetsActualsRowsToPortfolioMetrics,
 } from './utils/calculations'
+import { mapSupabaseChange } from './utils/changeLogMapping'
 import { commitmentSelectColumns, mapSupabaseCommitment } from './utils/commitmentMapping'
 import {
   mapSupabasePortfolioMetricsToTargetsActuals,
   portfolioMetricSelectColumns,
 } from './utils/portfolioMetricMapping'
+import {
+  mapSnapshotToSupabase,
+  mapSupabaseSnapshot,
+  snapshotSelectColumns,
+} from './utils/snapshotMapping'
 import './App.css'
 
 const views = [
@@ -39,6 +45,9 @@ const getInitialCommitments = () =>
     ...commitment,
     managerType: commitment.managerType || 'Current',
   }))
+
+const isMissingColumnError = (error, columnName) =>
+  error?.message?.toLowerCase().includes(columnName.toLowerCase())
 
 function App() {
   const [activeView, setActiveView] = useState(views[0].key)
@@ -64,11 +73,27 @@ function App() {
     let isMounted = true
 
     const loadCommitments = async () => {
-      const { data, error } = await supabase
-        .from('commitments')
-        .select(commitmentSelectColumns)
-        .order('fiscal_year', { ascending: true })
-        .order('asset_class', { ascending: true })
+      const fetchCommitments = (excludeDeleted) => {
+        let query = supabase
+          .from('commitments')
+          .select(commitmentSelectColumns)
+          .order('fiscal_year', { ascending: true })
+          .order('asset_class', { ascending: true })
+
+        if (excludeDeleted) {
+          query = query.is('deleted_at', null)
+        }
+
+        return query
+      }
+
+      let { data, error } = await fetchCommitments(true)
+
+      if (error && isMissingColumnError(error, 'deleted_at')) {
+        const fallbackResult = await fetchCommitments(false)
+        data = fallbackResult.data
+        error = fallbackResult.error
+      }
 
       if (error) {
         console.error('Failed to load commitments from Supabase:', error)
@@ -106,8 +131,42 @@ function App() {
       }
     }
 
+    const loadChangeLog = async () => {
+      const { data, error } = await supabase
+        .from('commitment_changes')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Failed to load commitment changes from Supabase:', error)
+        return
+      }
+
+      if (isMounted) {
+        setChangeLogRecords((data || []).map(mapSupabaseChange))
+      }
+    }
+
+    const loadSnapshots = async () => {
+      const { data, error } = await supabase
+        .from('snapshots')
+        .select(snapshotSelectColumns)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Failed to load snapshots from Supabase:', error)
+        return
+      }
+
+      if (isMounted) {
+        setSnapshots((data || []).map(mapSupabaseSnapshot))
+      }
+    }
+
     loadCommitments()
     loadPortfolioMetrics()
+    loadChangeLog()
+    loadSnapshots()
 
     return () => {
       isMounted = false
@@ -148,7 +207,7 @@ function App() {
     ])
   }
 
-  const createSnapshot = (snapshotName) => {
+  const createSnapshot = async (snapshotName) => {
     const copiedCommitments = commitmentData.map((commitment) => ({ ...commitment }))
     const totalByFiscalYear = fiscalYears.reduce((totals, fiscalYear) => {
       totals[fiscalYear] = copiedCommitments
@@ -175,6 +234,28 @@ function App() {
       commitmentCount: copiedCommitments.length,
       totalByFiscalYear,
       totalByAssetClass,
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('snapshots')
+          .insert(mapSnapshotToSupabase(snapshot))
+          .select(snapshotSelectColumns)
+          .single()
+
+        if (error) {
+          console.error('Failed to insert snapshot in Supabase:', error)
+          return null
+        }
+
+        const insertedSnapshot = mapSupabaseSnapshot(data)
+        setSnapshots((currentSnapshots) => [insertedSnapshot, ...currentSnapshots])
+        return insertedSnapshot.id
+      } catch (error) {
+        console.error('Failed to persist snapshot to Supabase:', error)
+        return null
+      }
     }
 
     setSnapshots((currentSnapshots) => [snapshot, ...currentSnapshots])

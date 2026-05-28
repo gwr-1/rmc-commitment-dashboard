@@ -100,8 +100,10 @@ function Snapshots({ snapshots, onCreateSnapshot }) {
   const [selectedSnapshotId, setSelectedSnapshotId] = useState(null)
   const selectedSnapshot = snapshots.find((snapshot) => snapshot.id === selectedSnapshotId)
 
-  const handleCreateSnapshot = () => {
-    const snapshotId = onCreateSnapshot(snapshotName.trim())
+  const handleCreateSnapshot = async () => {
+    const snapshotId = await onCreateSnapshot(snapshotName.trim())
+    if (!snapshotId) return
+
     setSelectedSnapshotId(snapshotId)
     setSnapshotName('')
   }
