@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Layout from './components/Layout'
 import PortfolioOverview from './components/PortfolioOverview'
 import AssetClassDetail from './components/AssetClassDetail'
@@ -8,6 +8,7 @@ import Snapshots from './components/Snapshots'
 import { assetClasses, fiscalYears } from './constants'
 import { commitments } from './data/commitments'
 import { changeLog } from './data/changes'
+import { isSupabaseConfigured, supabase } from './lib/supabaseClient'
 import { formatTimestamp } from './utils/calculations'
 import './App.css'
 
@@ -27,11 +28,54 @@ const getInitialCommitments = () =>
     managerType: commitment.managerType || 'Current',
   }))
 
+const mapSupabaseCommitment = (commitment) => ({
+  id: commitment.id,
+  fiscalYear: commitment.fiscal_year,
+  assetClass: commitment.asset_class,
+  managerType: commitment.manager_type,
+  manager: commitment.manager_name,
+  investmentName: commitment.investment_name,
+  commitmentType: commitment.commitment_type,
+  targetAmount: Number(commitment.target_amount || 0),
+  status: commitment.status,
+})
+
 function App() {
   const [activeView, setActiveView] = useState(views[0].key)
   const [commitmentData, setCommitmentData] = useState(getInitialCommitments)
   const [changeLogRecords, setChangeLogRecords] = useState(changeLog)
   const [snapshots, setSnapshots] = useState([])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+
+    let isMounted = true
+
+    const loadCommitments = async () => {
+      const { data, error } = await supabase
+        .from('commitments')
+        .select(
+          'id, fiscal_year, asset_class, manager_type, manager_name, investment_name, commitment_type, target_amount, status'
+        )
+        .order('fiscal_year', { ascending: true })
+        .order('asset_class', { ascending: true })
+
+      if (error) {
+        console.error('Failed to load commitments from Supabase:', error)
+        return
+      }
+
+      if (isMounted) {
+        setCommitmentData((data || []).map(mapSupabaseCommitment))
+      }
+    }
+
+    loadCommitments()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const appendChange = (change) => {
     setChangeLogRecords((currentChanges) => [
