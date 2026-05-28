@@ -10,6 +10,7 @@ import { commitments } from './data/commitments'
 import { changeLog } from './data/changes'
 import { isSupabaseConfigured, supabase } from './lib/supabaseClient'
 import { formatTimestamp } from './utils/calculations'
+import { commitmentSelectColumns, mapSupabaseCommitment } from './utils/commitmentMapping'
 import './App.css'
 
 const views = [
@@ -28,18 +29,6 @@ const getInitialCommitments = () =>
     managerType: commitment.managerType || 'Current',
   }))
 
-const mapSupabaseCommitment = (commitment) => ({
-  id: commitment.id,
-  fiscalYear: commitment.fiscal_year,
-  assetClass: commitment.asset_class,
-  managerType: commitment.manager_type,
-  manager: commitment.manager_name,
-  investmentName: commitment.investment_name,
-  commitmentType: commitment.commitment_type,
-  targetAmount: Number(commitment.target_amount || 0),
-  status: commitment.status,
-})
-
 function App() {
   const [activeView, setActiveView] = useState(views[0].key)
   const [commitmentData, setCommitmentData] = useState(getInitialCommitments)
@@ -55,9 +44,7 @@ function App() {
     const loadCommitments = async () => {
       const { data, error } = await supabase
         .from('commitments')
-        .select(
-          'id, fiscal_year, asset_class, manager_type, manager_name, investment_name, commitment_type, target_amount, status'
-        )
+        .select(commitmentSelectColumns)
         .order('fiscal_year', { ascending: true })
         .order('asset_class', { ascending: true })
 

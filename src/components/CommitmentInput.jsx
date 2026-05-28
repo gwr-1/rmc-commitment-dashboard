@@ -9,17 +9,12 @@ import {
 } from '../constants'
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
 import { formatChangeValue, formatMillions, toMillions } from '../utils/calculations'
-
-const commitmentFieldColumns = {
-  fiscalYear: 'fiscal_year',
-  assetClass: 'asset_class',
-  managerType: 'manager_type',
-  manager: 'manager_name',
-  investmentName: 'investment_name',
-  commitmentType: 'commitment_type',
-  targetAmount: 'target_amount',
-  status: 'status',
-}
+import {
+  commitmentFieldColumns,
+  commitmentSelectColumns,
+  mapCommitmentToSupabase,
+  mapSupabaseCommitment,
+} from '../utils/commitmentMapping'
 
 function CommitmentInput({
   commitmentData,
@@ -135,7 +130,60 @@ function CommitmentInput({
     persistCommitmentEdit(originalCommitment, updatedCommitment, field, nextValue)
   }
 
-  const addCommitment = () => {
+  const appendAddedChange = (commitment) => {
+    appendChange({
+      assetClass: commitment.assetClass,
+      fiscalYear: commitment.fiscalYear,
+      manager: commitment.manager,
+      investmentName: commitment.investmentName,
+      changeType: 'Added',
+      fieldChanged: 'Commitment',
+      oldValue: '-',
+      newValue: `${formatMillions(commitment.targetAmount)} target added`,
+    })
+  }
+
+  const persistAddedCommitment = async (commitment) => {
+    if (!persistEditsToSupabase || !isSupabaseConfigured) return null
+
+    try {
+      const { data, error } = await supabase
+        .from('commitments')
+        .insert(mapCommitmentToSupabase(commitment))
+        .select(commitmentSelectColumns)
+        .single()
+
+      if (error) {
+        console.error('Failed to insert commitment in Supabase:', error)
+        return null
+      }
+
+      const insertedCommitment = mapSupabaseCommitment(data)
+      const { error: changeError } = await supabase.from('commitment_changes').insert({
+        commitment_id: insertedCommitment.id,
+        change_type: 'Added',
+        field_changed: null,
+        old_value: null,
+        new_value: 'Created',
+        changed_by: 'Investment Team',
+        asset_class: insertedCommitment.assetClass,
+        fiscal_year: insertedCommitment.fiscalYear,
+        manager_name: insertedCommitment.manager,
+        investment_name: insertedCommitment.investmentName,
+      })
+
+      if (changeError) {
+        console.error('Failed to insert commitment add change in Supabase:', changeError)
+      }
+
+      return insertedCommitment
+    } catch (error) {
+      console.error('Failed to persist new commitment to Supabase:', error)
+      return null
+    }
+  }
+
+  const addCommitment = async () => {
     const nextIdNumber = commitmentData.length + 1
     const defaultAssetClass = filters.assetClass === 'All' ? 'RE' : filters.assetClass
     const defaultFiscalYear = filters.fiscalYear === 'All' ? 'FY26' : filters.fiscalYear
@@ -156,18 +204,17 @@ function CommitmentInput({
       notes: 'New commitment entry.',
     }
 
-    setCommitmentData((currentCommitments) => [newCommitment, ...currentCommitments])
+    if (persistEditsToSupabase && isSupabaseConfigured) {
+      const insertedCommitment = await persistAddedCommitment(newCommitment)
+      if (!insertedCommitment) return
 
-    appendChange({
-      assetClass: newCommitment.assetClass,
-      fiscalYear: newCommitment.fiscalYear,
-      manager: newCommitment.manager,
-      investmentName: newCommitment.investmentName,
-      changeType: 'Added',
-      fieldChanged: 'Commitment',
-      oldValue: '-',
-      newValue: `${formatMillions(newCommitment.targetAmount)} target added`,
-    })
+      setCommitmentData((currentCommitments) => [insertedCommitment, ...currentCommitments])
+      appendAddedChange(insertedCommitment)
+      return
+    }
+
+    setCommitmentData((currentCommitments) => [newCommitment, ...currentCommitments])
+    appendAddedChange(newCommitment)
   }
 
   const deleteCommitment = (id) => {
